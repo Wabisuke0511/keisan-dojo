@@ -6,6 +6,8 @@
 
 - ビルドなし。`index.html`（画面・処理）＋ `problems.js`（教材データ）＋ `sw.js` / `manifest.json`。
 - ローカル確認: `npx serve -p 3463 .`（`.claude/launch.json` に設定済み）
+- 公開: https://wabisuke0511.github.io/keisan-dojo/ （GitHub Pages・`main` ブランチのルート。リポジトリ `Wabisuke0511/keisan-dojo` は公開）
+  デプロイは `git push` だけ。push の前に `APP.version` / `APP.buildTime` / `CHANGELOG` を更新する。リポジトリ操作は `gh`（GitHub CLI、ログイン済み）
 - `question_resource/` は教材の写真（市販問題集）と、それを起こしたCSV。**`.gitignore` 済み。リポジトリ・GitHub Pages に載せない。**
 
 ## 画面とモード
