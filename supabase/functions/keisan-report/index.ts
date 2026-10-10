@@ -18,6 +18,7 @@ const LIMIT_PER_USER = 5, LIMIT_PER_EMAIL = 5, LIMIT_GLOBAL = 50;   // 24時間�
 const OPS: Record<string, { name: string; icon: string }> = {
   tashizan: { name: "たし算", icon: "➕" }, hikizan: { name: "ひき算", icon: "➖" },
   kakezan: { name: "かけ算", icon: "✖️" }, warizan: { name: "わり算", icon: "➗" },
+  lcm: { name: "最小公倍数", icon: "🔗" }, bunsu: { name: "分数のたし算・ひき算", icon: "🍰" },
 };
 const okMail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 200;
 

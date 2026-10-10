@@ -110,7 +110,21 @@
     .ans-box.rem { min-width: 80px; }
     .ans-box.sm { min-width: 72px; padding: 8px 8px; font-size: 1.6rem; min-height: 54px; }
     .ans-op { font-size: 1.5rem; font-weight: 900; color: var(--primary); }
-    .problem-hint { font-size: .85rem; font-weight: 800; color: var(--muted); min-height: 1.2em; margin-bottom: 4px; }
+    /* 分数：たて書き表示と、分子/分母の入力枠 */
+    .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.05; margin: 0 .08em; }
+    .frac > span { padding: 0 .12em; }
+    .frac > span:first-child { border-bottom: 3px solid currentColor; }
+    .problem-text .frac { font-size: .88em; }
+    .problem-text .fw { margin-right: .05em; }
+    .problem-text .op.small { font-size: .6em; margin: 0 .35em; color: var(--muted); }
+    .problem-card.inline { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: 8px; }
+    .problem-card.inline .problem-hint { flex-basis: 100%; }
+    .problem-card.inline .ans-row { margin-top: 0; flex-wrap: nowrap; }
+    .problem-card.inline .problem-text { font-size: 2rem; }
+    .frac-in { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; }
+    .frac-bar { width: 100%; height: 3px; background: var(--text); border-radius: 2px; }
+    .ans-box.sm.fr { min-width: 62px; min-height: 44px; font-size: 1.35rem; padding: 4px 8px; }
+    .problem-hint { text-align: center; font-size: .85rem; font-weight: 800; color: var(--muted); min-height: 1.2em; margin-bottom: 4px; }
     .start-inst { font-weight: 800; color: var(--text); margin-bottom: 4px; }
     .start-ex { font-size: .9rem; margin-bottom: 10px; }
     .ans-box.active { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px var(--primary-soft); }
@@ -138,6 +152,8 @@
       .ans-row { margin-top: 8px; }
       .ans-box { min-height: 52px; font-size: 1.7rem; padding: 6px 12px; }
       .ans-box.sm { min-height: 48px; font-size: 1.45rem; }
+      .ans-box.sm.fr { min-height: 38px; font-size: 1.2rem; }
+      .problem-card.inline .problem-text { font-size: 1.7rem; }
       .feedback { min-height: 24px; font-size: 1rem; }
       .keypad { gap: 6px; }
       .key { height: 52px; }
@@ -405,8 +421,8 @@ const APP = {
   name: '計算道場',
   emoji: '🧮',
   tagline: 'はやく・正確に。タイムをちぢめよう。',
-  version: 'v0.3.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
-  buildTime: '202610101330',      // yyyymmddhhmm ★デプロイのたびに更新
+  version: 'v0.4.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
+  buildTime: '202610101331',      // yyyymmddhhmm ★デプロイのたびに更新
   color: '#2d6fb0',               // メインカラー
   colorDark: '#1f5089',
   clearCount: 3,                  // シートの達成度 1=ぜんもん正解 2=○タイム 3=◎タイム。3で「クリア」
@@ -420,6 +436,7 @@ const APP = {
 
 // 更新履歴（新しい版を先頭に追加）
 const CHANGELOG = [
+  { version: 'v0.4.0', date: '2026-10-10', items: ['「最小公倍数」（4レベル）と「分数のたし算・ひき算」（8レベル）を追加', '分数は たて書きで表示。答えは 整数・分子・分母 の枠に入れる（約分・帯分数もチェック）'] },
   { version: 'v0.3.0', date: '2026-10-10', items: ['どのレベルもシートを4枚（X-1〜X-4）にそろえました（全144シート・4104問）', 'シートの番号を「4-1」の形に'] },
   { version: 'v0.2.1', date: '2026-10-10', items: ['iPhone向け：とき中は画面が暗くならないように', '引っぱって更新・長押しの選択を出さないように', 'iPhone SE など小さい画面でもテンキーが収まるように'] },
   { version: 'v0.2.0', date: '2026-10-10', items: ['問題集のデータ（79シート・2232問）を入れました', '「1のくらいだけ」「10のくらいだけ」「途中式つき」「あまりつき」の問題に対応', '連続モードはシートを丸ごと（36問・18問）解く形に'] },
@@ -465,6 +482,9 @@ registerModule({ id: 'tashizan', name: 'たし算', icon: '➕', sym: '+', color
 registerModule({ id: 'hikizan',  name: 'ひき算', icon: '➖', sym: '−', color: '#2e8b57', stepSep: '−', solve: (a, b) => a - b });
 registerModule({ id: 'kakezan',  name: 'かけ算', icon: '✖️', sym: '×', color: '#d35400', stepSep: '+', solve: (a, b) => a * b });
 registerModule({ id: 'warizan',  name: 'わり算', icon: '➗', sym: '÷', color: '#8e44ad', solve: (a, b) => Math.floor(a / b) });
+// 分数に強くなるための追加教材（本にはない・自動生成）
+registerModule({ id: 'lcm',   name: '最小公倍数', icon: '🔗', sym: 'と', color: '#c0392b', solve: () => null });
+registerModule({ id: 'bunsu', name: '分数のたし算・ひき算', icon: '🍰', sym: '', color: '#16a085', solve: () => null });
 function moduleById(id) { return modules.find((m) => m.id === id); }
 
 // 問題の形式（problems.js の mode）。fields = 入力する枠（左から順に入れる）
@@ -476,10 +496,20 @@ const MODES = {
   S:   { fields: ['s1', 's2', 'ans'] },
   S3:  { fields: ['s1', 's2', 'ans'] },
   K:   { fields: ['s1', 's2', 'ans'] },
+  L2:  { fields: ['ans'], prompt: '最小公倍数は？' },
+  L3:  { fields: ['ans'], prompt: '最小公倍数は？' },
+  F:   { fields: ['w', 'n', 'd'], prompt: '約分して、1より大きいときは帯分数で' },   // 整数・分子・分母（整数だけ／分数だけ もOK）
 };
+const FIELD_NAME = { rem: 'あまり', w: '整数', n: '分子', d: '分母' };
 // 問題オブジェクト { op, a, b, mode, fields, ans:{枠: 正解} }
 // p の1行: N,O1,T10 → [a, b, 答え]  R → [a, b, 商, あまり]  S,S3,K → [a, b, 答え, 途中1, 途中2]
 function makeProblem(op, row, mode) {
+  if (mode === 'L2' || mode === 'L3') {           // 最小公倍数: [a, b, (c,) 答え]
+    return { op, mode, nums: row.slice(0, -1), fields: ['ans'], ans: { ans: row[row.length - 1] } };
+  }
+  if (mode === 'F') {                             // 分数: [整数1, 分子1, 分母1, 符号, 整数2, 分子2, 分母2, 答え整数, 答え分子, 答え分母]
+    return { op, mode, x: row.slice(0, 3), sign: row[3], y: row.slice(4, 7), fields: ['w', 'n', 'd'], ans: { w: row[7], n: row[8], d: row[9] } };
+  }
   const m = moduleById(op), [a, b] = row;
   mode = MODES[mode] ? mode : (op === 'warizan' && a % b ? 'R' : 'N');
   const ans = { ans: row[2] ?? m.solve(a, b) };
@@ -487,9 +517,36 @@ function makeProblem(op, row, mode) {
   if (MODES[mode].fields.includes('s1')) { ans.s1 = row[3]; ans.s2 = row[4]; }
   return { op, a, b, mode, fields: MODES[mode].fields, ans };
 }
-function problemText(q) { const m = moduleById(q.op); return `${q.a} ${m.sym} ${q.b}`; }
+// 分数の文字表記（2と1/3）と、たて書きのHTML
+const has = (x) => x != null && !isNaN(x);
+const fracStr = (w, n, d) => (!has(n) ? String(has(w) ? w : '？') : `${has(w) && w ? w + 'と' : ''}${n}/${has(d) ? d : '？'}`);
+const fracHTML = (w, n, d) => `${w ? `<span class="fw">${w}</span>` : ''}<span class="frac"><span>${n}</span><span>${d}</span></span>`;
+function problemText(q) {
+  if (q.nums) return q.nums.join(' と ');
+  if (q.x) return `${fracStr(...q.x)} ${q.sign === '+' ? '+' : '−'} ${fracStr(...q.y)}`;
+  const m = moduleById(q.op); return `${q.a} ${m.sym} ${q.b}`;
+}
+function problemHTML(q) {
+  if (q.nums) return q.nums.map((x) => `<span>${x}</span>`).join('<span class="op small">と</span>');
+  if (q.x) return `${fracHTML(...q.x)}<span class="op">${q.sign === '+' ? '+' : '−'}</span>${fracHTML(...q.y)}<span class="op">=</span>`;
+  const m = moduleById(q.op); return `${q.a}<span class="op">${m.sym}</span>${q.b}<span class="op">=</span>`;
+}
+// 分数の答えあわせ。値が同じでも、約分していない・帯分数にしていないときは不正解（理由を返す）
+const gcd = (a, b) => { while (b) [a, b] = [b, a % b]; return Math.abs(a); };
+function checkFraction(q, v) {
+  const w = isNaN(v.w) ? 0 : v.w, hasF = !isNaN(v.n);
+  const ok = w === (q.ans.w || 0) && (q.ans.n == null ? !hasF : hasF && v.n === q.ans.n && v.d === q.ans.d);
+  if (ok) return { ok };
+  // 値は合っているか（約分・帯分数のし忘れを教える）
+  const D = q.ans.d || 1, right = (q.ans.w || 0) * D + (q.ans.n || 0);
+  const vd = hasF ? v.d : 1, left = w * vd + (hasF ? v.n : 0);
+  let reason = '';
+  if (vd > 0 && left * D === right * vd) reason = hasF && gcd(v.n, v.d) !== 1 ? '約分できるよ' : (hasF && v.n >= v.d ? '帯分数にしよう' : '');
+  return { ok: false, reason };
+}
 // 答えの書き方（v = {枠: 値}）。正解の表示にも、まちがえた答えの表示にも使う
 function fmtAnswer(q, v) {
+  if (q.mode === 'F') return fracStr(v.w, v.n, v.d);
   const s = (k) => (v[k] ?? v[k] === 0 ? String(v[k]) : '？');
   if (q.mode === 'R') return `${s('ans')} あまり ${s('rem')}`;
   if (q.fields.includes('s1')) return `${s('s1')} ${moduleById(q.op).stepSep} ${s('s2')} = ${s('ans')}`;
@@ -752,12 +809,13 @@ function startRun(key) {
   $('start-title').textContent = `${m.icon} ${m.name} ${part.label}`;
   $('start-info').innerHTML =
     (part.instruction ? `<div class="start-inst">${esc(part.instruction)}</div>` : '') +
-    (part.example ? `<div class="start-ex">（れい）${esc(fmtExample(part.example))}</div>` : '') +
+    (part.example ? `<div class="start-ex">（れい）${esc(fmtExample(part.example, part.mode))}</div>` : '') +
     `${run.qs.length}問を つづけて解こう<br>` +
     (part.great != null ? `◎タイム ${fmtTime(part.great)}　` : '') + (part.good != null ? `○タイム ${fmtTime(part.good)}` : '') +
     (part.scaled ? '<br><small>（シートを分けたので タイムは目安）</small>' : '') +
     (progressMap[part.key] ? `<br>いまの記録：${RANK_MARK[progressMap[part.key]]}` : '') +
-    (part.probs[0].fields.length > 1 ? `<br><small>左の枠から じゅんに入れて「けってい」</small>` : '');
+    (part.mode === 'F' ? `<br><small>整数→分子→分母の じゅんに入れる。分数だけのときは 整数の枠で そのまま「分子へ」</small>`
+      : part.probs[0].fields.length > 1 ? `<br><small>左の枠から じゅんに入れて「けってい」</small>` : '');
   $('start-card').classList.remove('hidden');
   $('play-area').classList.add('hidden'); $('result-card').classList.add('hidden');
   $('run-back').textContent = '← やめる'; showScreen('run-screen');
@@ -795,15 +853,15 @@ function startOne(op, level, list) {
 let inp = { vals: {}, fi: 0, locked: false };
 const curQ = () => run && run.qs[run.idx];
 const curField = () => curQ().fields[inp.fi];
-function fmtExample(s) { return s.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−').replace(/(\d)r(\d)/, '$1 あまり $2'); }
+function fmtExample(s, mode) { return (mode === 'F' ? s : s.replace(/\//g, '÷')).replace(/\*/g, '×').replace(/-/g, '−').replace(/(\d)r(\d)/, '$1 あまり $2'); }
 function showProblem() {
   const q = curQ();
   inp = { vals: Object.fromEntries(q.fields.map((f) => [f, ''])), fi: 0, locked: false };
   run.qT0 = performance.now();
-  const m = moduleById(q.op);
-  $('problem-text').innerHTML = `${q.a}<span class="op">${m.sym}</span>${q.b}<span class="op">=</span>`;
+  $('problem-text').innerHTML = problemHTML(q);
+  $('problem-card').classList.toggle('inline', q.mode === 'F');   // 分数は 問題と答えを横に並べる
   const hint = MODES[q.mode].hint, part = run.part || partsOf(q.op, run.level).find((p) => p.mode === q.mode);
-  $('problem-hint').textContent = hint ? `${hint}だけ こたえる` : (q.fields.includes('s1') && part ? `（れい）${fmtExample(part.example)}` : '');
+  $('problem-hint').textContent = MODES[q.mode].prompt ? MODES[q.mode].prompt : hint ? `${hint}だけ こたえる` : (q.fields.includes('s1') && part ? `（れい）${fmtExample(part.example)}` : '');
   $('run-count').textContent = `${run.idx + 1} / ${run.qs.length}問`;
   $('run-progress').style.width = (run.idx / run.qs.length * 100) + '%';
   $('feedback').textContent = ''; $('feedback').className = 'feedback';
@@ -811,10 +869,11 @@ function showProblem() {
   const card = $('problem-card'); card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
 }
 function renderAnswer() {
-  const q = curQ(), small = q.fields.length >= 3 ? ' sm' : '';
+  const q = curQ(), small = q.fields.length >= 3 ? (q.mode === 'F' ? ' sm fr' : ' sm') : '';
   const box = (f, i) => `<div class="ans-box${small}${f === 'rem' ? ' rem' : ''}${i === inp.fi ? ' active' : ''}" id="box-${f}" onclick="setField(${i})">${esc(inp.vals[f]) || '&nbsp;'}</div>`;
   let html;
   if (q.mode === 'R') html = box('ans', 0) + `<span class="ans-label">あまり</span>` + box('rem', 1);
+  else if (q.mode === 'F') html = box('w', 0) + `<span class="frac-in">${box('n', 1)}<span class="frac-bar"></span>${box('d', 2)}</span>`;
   else if (q.fields.includes('s1')) { const sep = `<span class="ans-op">${moduleById(q.op).stepSep}</span>`; html = box('s1', 0) + sep + box('s2', 1) + `<span class="ans-op">=</span>` + box('ans', 2); }
   else html = box('ans', 0);
   $('ans-row').innerHTML = html;
@@ -825,7 +884,7 @@ function renderKeypad(nextMode) {
   const last = !run || !curQ() || inp.fi >= curQ().fields.length - 1;
   $('keypad').innerHTML = keys.map((k) => {
     if (k === 'BS') return `<button class="key fn" data-k="BS" aria-label="けす">⌫</button>`;
-    if (k === 'OK') return `<button class="key enter${nextMode ? ' next' : ''}" data-k="OK">${nextMode ? 'つぎへ ▶' : (last ? 'けってい' : (curQ().fields[inp.fi + 1] === 'rem' ? 'あまりへ ▶' : 'となりへ ▶'))}</button>`;
+    if (k === 'OK') return `<button class="key enter${nextMode ? ' next' : ''}" data-k="OK">${nextMode ? 'つぎへ ▶' : (last ? 'けってい' : `${FIELD_NAME[curQ().fields[inp.fi + 1]] || 'となり'}へ ▶`)}</button>`;
     return `<button class="key" data-k="${k}">${k}</button>`;
   }).join('');
 }
@@ -845,13 +904,26 @@ function pressKey(k) {
 }
 function shakeBox(f) { const el = $('box-' + f); if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 350); } }
 function submitAnswer() {
-  const q = curQ();
-  if (inp.vals[curField()] === '') { shakeBox(curField()); return; }
-  if (inp.fi < q.fields.length - 1) { setField(inp.fi + 1); return; }      // 左の枠から順に
-  const blank = q.fields.findIndex((f) => inp.vals[f] === '');
-  if (blank >= 0) { setField(blank); shakeBox(q.fields[blank]); return; }
-  const vals = Object.fromEntries(q.fields.map((f) => [f, parseInt(inp.vals[f], 10)]));
-  const ok = q.fields.every((f) => vals[f] === q.ans[f]);
+  const q = curQ(), V = inp.vals;
+  let vals, ok, reason = '';
+  if (q.mode === 'F') {
+    // 分数：整数の枠は空でもよい（分数だけ）。分子・分母が空なら整数だけの答え
+    const f = curField();
+    if (f === 'w' && V.n === '' && V.d === '') { setField(1); return; }                 // 整数 → 分子へ
+    if (f === 'n' && V.n !== '' && V.d === '') { setField(2); return; }                 // 分子 → 分母へ
+    if (V.n === '' && V.d === '' && V.w === '') { setField(0); shakeBox(f); return; }
+    if ((V.n === '') !== (V.d === '')) { const e = V.n === '' ? 1 : 2; setField(e); shakeBox(q.fields[e]); return; }
+    if (V.d !== '' && parseInt(V.d, 10) === 0) { setField(2); shakeBox('d'); return; }
+    vals = Object.fromEntries(q.fields.map((k) => [k, V[k] === '' ? NaN : parseInt(V[k], 10)]));
+    ({ ok, reason = '' } = checkFraction(q, vals));
+  } else {
+    if (V[curField()] === '') { shakeBox(curField()); return; }
+    if (inp.fi < q.fields.length - 1) { setField(inp.fi + 1); return; }      // 左の枠から順に
+    const blank = q.fields.findIndex((k) => V[k] === '');
+    if (blank >= 0) { setField(blank); shakeBox(q.fields[blank]); return; }
+    vals = Object.fromEntries(q.fields.map((k) => [k, parseInt(V[k], 10)]));
+    ok = q.fields.every((k) => vals[k] === q.ans[k]);
+  }
   const sec = (performance.now() - run.qT0) / 1000;
   run.results.push({ q, vals, ok, sec });
 
@@ -864,7 +936,7 @@ function submitAnswer() {
   inp.locked = true;
   const fb = $('feedback');
   fb.className = 'feedback ' + (ok ? 'ok' : 'ng');
-  fb.innerHTML = (ok ? '⭕ せいかい！' : `❌ こたえ ${esc(answerText(q))}`) + `<small>${sec.toFixed(1)}秒</small>`;
+  fb.innerHTML = (ok ? '⭕ せいかい！' : `❌ ${reason ? esc(reason) + '　' : ''}こたえ ${esc(answerText(q))}`) + `<small>${sec.toFixed(1)}秒</small>`;
   $('run-progress').style.width = ((run.idx + 1) / run.qs.length * 100) + '%';
   if (ok) setTimeout(() => { if (run && run.mode === 'one' && inp.locked && run.results.length === run.idx + 1) nextOne(); }, 650);
   else renderKeypad(true);

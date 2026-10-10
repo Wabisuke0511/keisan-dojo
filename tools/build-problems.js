@@ -138,7 +138,128 @@ for (const [k, list] of groups) {
     added++;
   }
 }
-sheets.sort((x, y) => Object.keys(OPSYM).indexOf(x.op) - Object.keys(OPSYM).indexOf(y.op) || x.level - y.level || x.no - y.no);
+// =====================================================
+//  追加教材（本にはない・ぜんぶ自動でつくる）：最小公倍数 / 分数のたし算・ひき算
+//  各レベル4枚。○◎タイムは目安（使ってみて調整する）
+// =====================================================
+const gcd = (a, b) => { while (b) [a, b] = [b, a % b]; return Math.abs(a); };
+const lcm = (a, b) => (a / gcd(a, b)) * b;
+const lcmN = (xs) => xs.reduce(lcm);
+const pick = (R, arr) => arr[Math.floor(R() * arr.length)];
+const between = (R, lo, hi) => lo + Math.floor(R() * (hi - lo + 1));
+const range = (lo, hi) => Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+
+// 1シートぶんを作る。gen(R) が1問（キー文字列つき）を返す。シートの中で同じ問題を出さない
+function makeSheet(R, n, gen) {
+  const seen = new Set(), p = [];
+  for (let tries = 0; p.length < n && tries < 100000; tries++) {
+    const g = gen(R); if (!g || seen.has(g.key)) continue;
+    seen.add(g.key); p.push(g.row);
+  }
+  if (p.length < n) throw new Error('問題が足りない');
+  return p;
+}
+function addGenerated(op, levels) {
+  levels.forEach((lv, i) => {
+    for (let no = 1; no <= SHEETS_PER_LEVEL; no++) {
+      const R = rng(`${op}:${i + 1}:${no}`);
+      sheets.push({ op, level: i + 1, no, mode: lv.mode, good: lv.good, great: lv.great, instruction: lv.instruction, example: lv.example, gen: true, p: makeSheet(R, lv.n, lv.gen) });
+      added++;
+    }
+  });
+}
+
+// ---------- 最小公倍数（L2: [a, b, 答え] / L3: [a, b, c, 答え]） ----------
+const lcm2 = (as, bs, ok = () => true) => (R) => {
+  let a = pick(R, as), b = pick(R, bs); if (a === b || !ok(a, b)) return null;
+  if (a > b && R() < 0.5) [a, b] = [b, a];
+  return { key: `${a},${b}`, row: [a, b, lcm(a, b)] };   // 4と6 と 6と4 は別の問題として数える
+};
+const FRIENDLY = [6, 8, 9, 10, 12, 14, 15, 16, 18, 20, 21, 24, 25, 28, 30, 32, 35, 36, 40, 42, 45, 48];   // 分数でよく出る分母
+addGenerated('lcm', [
+  { mode: 'L2', n: 36, good: 150, great: 100, instruction: '2つの数の最小公倍数をこたえなさい。', example: '4と6→12',
+    gen: lcm2(range(2, 9), range(2, 9)) },
+  { mode: 'L2', n: 36, good: 180, great: 120, instruction: '2つの数の最小公倍数をこたえなさい。', example: '6と8→24',
+    gen: lcm2(range(2, 12), range(6, 20), (a, b) => lcm(a, b) <= 120) },
+  { mode: 'L2', n: 18, good: 150, great: 100, instruction: '2つの数の最小公倍数をこたえなさい。', example: '12と18→36',
+    gen: lcm2(FRIENDLY, FRIENDLY, (a, b) => a % b !== 0 && b % a !== 0 && lcm(a, b) <= 360) },
+  { mode: 'L3', n: 18, good: 180, great: 120, instruction: '3つの数の最小公倍数をこたえなさい。', example: '4と6と9→36',
+    gen: (R) => {
+      const xs = [pick(R, range(2, 12)), pick(R, range(2, 12)), pick(R, range(2, 12))];
+      if (new Set(xs).size < 3 || lcmN(xs) > 180) return null;
+      return { key: xs.slice().sort((x, y) => x - y).join(','), row: [...xs, lcmN(xs)] };
+    } },
+]);
+
+// ---------- 分数のたし算・ひき算（F: [整数1, 分子1, 分母1, 符号, 整数2, 分子2, 分母2, 答え整数, 答え分子, 答え分母]） ----------
+// 答えは約分して、1より大きいときは帯分数。整数になるときは 答え分子・分母 = null
+function fracAnswer(num, den) {               // num/den（仮分数）→ [整数, 分子, 分母]
+  const g = gcd(num, den); num /= g; den /= g;
+  const w = Math.floor(num / den), r = num - w * den;
+  return r === 0 ? [w, null, null] : [w, r, den];
+}
+function fracRow(R, x, y, sign, opt = {}) {    // x, y = [整数, 分子, 分母]
+  const v = (f) => f[0] * f[2] + f[1];          // 仮分数の分子
+  const D = lcm(x[2], y[2]);
+  const num = v(x) * (D / x[2]) + sign * v(y) * (D / y[2]);
+  if (num <= 0) return null;                    // 0やマイナスは出さない
+  const ans = fracAnswer(num, D);
+  if (opt.noReduce && (gcd(num, D) !== 1 || num >= D)) return null;   // 約分なし・1未満
+  if (opt.needWhole === true && ans[0] === 0) return null;
+  if (ans[1] === null && R() < 0.8) return null;   // 答えが整数の問題は少なめ
+  return { key: `${x}|${sign}|${y}`, row: [x[0], x[1], x[2], sign > 0 ? '+' : '-', y[0], y[1], y[2], ...ans] };
+}
+const properFrac = (R, den) => { for (;;) { const n = between(R, 1, den - 1); if (gcd(n, den) === 1) return n; } };
+const F = (R, den, whole = 0) => [whole, properFrac(R, den), den];
+const sameDen = (R, sign, opt) => { const d = between(R, 3, 12); return fracRow(R, F(R, d), F(R, d), sign, opt); };
+const multDen = (R, sign) => {                 // 一方の分母がもう一方の倍数（1/3 と 1/6 など）
+  const d1 = between(R, 2, 6), d2 = d1 * pick(R, [2, 3, 4]); if (d2 > 24) return null;
+  return R() < 0.5 ? fracRow(R, F(R, d1), F(R, d2), sign) : fracRow(R, F(R, d2), F(R, d1), sign);
+};
+const otherDen = (R, sign, wholes) => {        // 最小公倍数で通分する（1/4 と 1/6 など）
+  const d1 = between(R, 2, 12), d2 = between(R, 2, 12);
+  if (d1 === d2 || d1 % d2 === 0 || d2 % d1 === 0 || lcm(d1, d2) > (wholes ? 36 : 60)) return null;   // 帯分数は通分を軽めに
+  // 帯分数はどちらも整数部分あり。ひき算は ひかれる数の整数部分を大きく（くり下がりは自然に出る）
+  const w1 = !wholes ? 0 : sign > 0 ? between(R, 1, 4) : between(R, 2, 5);
+  const w2 = !wholes ? 0 : sign > 0 ? between(R, 1, 4) : between(R, 1, w1 - 1);
+  return fracRow(R, F(R, d1, w1), F(R, d2, w2), sign);
+};
+const FRAC_INST = '計算しなさい。答えは約分して、1より大きいときは帯分数にしなさい。';
+addGenerated('bunsu', [
+  { mode: 'F', n: 18, good: 90,  great: 60,  instruction: '分母が同じ分数のたし算をしなさい。', example: '1/5+2/5=3/5',
+    gen: (R) => sameDen(R, 1, { noReduce: true }) },
+  { mode: 'F', n: 18, good: 120, great: 80,  instruction: '分母が同じ分数の計算。' + FRAC_INST.slice(7), example: '5/6+5/6=1と2/3',
+    gen: (R) => sameDen(R, R() < 0.6 ? 1 : -1) },
+  { mode: 'F', n: 18, good: 150, great: 100, instruction: '分母がちがう分数のたし算。' + FRAC_INST.slice(7), example: '1/3+1/6=1/2',
+    gen: (R) => multDen(R, 1) },
+  { mode: 'F', n: 18, good: 150, great: 100, instruction: '分母がちがう分数のひき算。' + FRAC_INST.slice(7), example: '3/4-1/8=5/8',
+    gen: (R) => multDen(R, -1) },
+  { mode: 'F', n: 18, good: 210, great: 140, instruction: '最小公倍数で通分して、たし算をしなさい。答えは約分して、1より大きいときは帯分数に。', example: '1/4+1/6=5/12',
+    gen: (R) => otherDen(R, 1, false) },
+  { mode: 'F', n: 18, good: 210, great: 140, instruction: '最小公倍数で通分して、ひき算をしなさい。答えは約分して、1より大きいときは帯分数に。', example: '5/6-3/8=11/24',
+    gen: (R) => otherDen(R, -1, false) },
+  { mode: 'F', n: 18, good: 270, great: 180, instruction: '帯分数のたし算。' + FRAC_INST.slice(7), example: '1と1/2+2と2/3=4と1/6',
+    gen: (R) => otherDen(R, 1, true) },
+  { mode: 'F', n: 18, good: 270, great: 180, instruction: '帯分数のひき算。' + FRAC_INST.slice(7), example: '3と1/4-1と2/3=1と7/12',
+    gen: (R) => otherDen(R, -1, true) },
+]);
+
+// 追加教材の検算（答えをべつの方法で計算しなおす）
+sheets.filter((s) => s.op === 'lcm' || s.op === 'bunsu').forEach((s) => s.p.forEach((r) => {
+  if (s.op === 'lcm') {
+    const xs = r.slice(0, -1), ans = r[r.length - 1];
+    let m = Math.max(...xs); while (!xs.every((x) => m % x === 0)) m++;   // 素朴に数えあげる
+    if (m !== ans) warnings.push(`lcm ${s.level}-${s.no}: ${r}`);
+  } else {
+    const [w1, a, b, op, w2, c, d, W, N, D] = r, sign = op === '+' ? 1 : -1;
+    const left = ((w1 * b + a) * d + sign * (w2 * d + c) * b) * (D ?? 1), right = (W * (D ?? 1) + (N ?? 0)) * b * d;
+    const okForm = N === null || (N < D && gcd(N, D) === 1);
+    if (left !== right || !okForm || left <= 0) warnings.push(`bunsu ${s.level}-${s.no}: ${r}`);
+  }
+}));
+
+const OP_ORDER = [...Object.keys(OPSYM), 'lcm', 'bunsu'];
+sheets.sort((x, y) => OP_ORDER.indexOf(x.op) - OP_ORDER.indexOf(y.op) || x.level - y.level || x.no - y.no);
 
 const fmtSheet = (s) => `SHEETS.push(${JSON.stringify({ ...s, p: undefined }).replace(/}$/, '')},\n  "p":[${s.p.map((r) => JSON.stringify(r)).join(',')}]});`;
 const out = `// =====================================================
@@ -147,6 +268,8 @@ const out = `// =====================================================
 //
 //  mode: N=ふつう / O1=1のくらいだけ / T10=10のくらいだけ / S,S3,K=途中式つき / R=あまりつき
 //  p の1行: N,O1,T10 → [a, b, 答え]   R → [a, b, 商, あまり]   S,S3,K → [a, b, 答え, 途中1, 途中2]
+//          L2 → [a, b, 最小公倍数]   L3 → [a, b, c, 最小公倍数]
+//          F → [整数1, 分子1, 分母1, '+'/'-', 整数2, 分子2, 分母2, 答え整数, 答え分子, 答え分母]（答えが整数なら分子・分母は null）
 //  good=○タイム(秒) great=◎タイム(秒)
 //  gen:true = 本にないシートを、同じレベルの本の問題と同じ形でつくったもの（各レベル4枚にそろえるため）
 // =====================================================
