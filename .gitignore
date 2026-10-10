@@ -1,0 +1,3 @@
+question_resource/
+.env
+supabase/.temp/

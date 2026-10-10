@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "keisan-dojo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "3463", "."],
+      "port": 3463
+    }
+  ]
+}

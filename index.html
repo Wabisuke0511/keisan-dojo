@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>計算道場</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <meta name="theme-color" content="#2d6fb0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="計算道場" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="problems.js"></script>
+  <style>
+    /* ============================================================
+       デザイントークン。--primary / --primary-dark は起動時に APP.color から上書きされる
+       ============================================================ */
+    :root {
+      --primary: #2d6fb0; --primary-dark: #1f5089; --primary-soft: #e8f0fa;
+      --accent: #f0b429; --success: #27ae60; --error: #e74c3c;
+      --bg: #f0f4f8; --card: #ffffff; --text: #2c3e50; --muted: #7f8c8d; --line: #dde3ea;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh; max-width: 480px; margin: 0 auto;
+    }
+    .hidden { display: none !important; }
+    .screen { display: none; min-height: 100vh; padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+    .screen.active { display: flex; flex-direction: column; }
+    .tnum { font-variant-numeric: tabular-nums; }
+
+    /* ── ヘッダー類（ステータスバーまで色を伸ばす） ── */
+    .top-header { background: var(--primary); color: #fff; padding: calc(env(safe-area-inset-top) + 36px) 24px 28px; text-align: center; }
+    .top-header h1 { font-size: 2rem; font-weight: 900; letter-spacing: .05em; margin-bottom: 6px; }
+    .top-header p { font-size: .95rem; opacity: .85; }
+    .nickname-bar { margin-top: 14px; font-size: .85rem; opacity: .95; }
+    .nickname-name { font-weight: 800; }
+    .nickname-change-btn { margin-left: 8px; background: rgba(255,255,255,.2); color: #fff; border: none; border-radius: 8px; padding: 4px 10px; font-size: .8rem; cursor: pointer; }
+    .version-badge { margin-top: 10px; background: rgba(255,255,255,.18); color: #fff; border: none; border-radius: 8px; padding: 3px 10px; font-size: .75rem; cursor: pointer; }
+    .sub-header { color: #fff; background: var(--primary); padding: calc(env(safe-area-inset-top) + 20px) 20px 20px; display: flex; align-items: center; gap: 12px; }
+    .sub-header h2 { font-size: 1.25rem; font-weight: 800; }
+    .back-btn { background: rgba(255,255,255,.2); border: none; color: #fff; border-radius: 10px; padding: 8px 14px; font-size: .9rem; cursor: pointer; flex-shrink: 0; font-family: inherit; }
+    .back-btn:active { opacity: .7; }
+
+    /* ── トップ：種目カード ── */
+    .categories-list { display: flex; flex-direction: column; gap: 14px; padding: 24px 16px 8px; }
+    .category-card {
+      background: var(--card); border-radius: var(--radius); padding: 20px 18px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      display: flex; align-items: center; gap: 16px; cursor: pointer; border-left: 5px solid var(--primary);
+      transition: transform .15s; user-select: none;
+    }
+    .category-card:active { transform: scale(.97); }
+    .category-card.empty { opacity: .6; }
+    .cat-icon { font-size: 2.4rem; flex-shrink: 0; }
+    .cat-info { flex: 1; }
+    .cat-name { font-size: 1.15rem; font-weight: 800; margin-bottom: 4px; }
+    .cat-desc { font-size: .85rem; color: var(--muted); font-weight: 600; }
+    .cat-prog { font-size: .8rem; color: var(--primary-dark); font-weight: 700; margin-top: 4px; }
+    .cat-arrow { font-size: 1.2rem; color: var(--muted); }
+    .top-actions { padding: 8px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .home-action-btn { width: 100%; padding: 16px; font-size: 1.05rem; font-weight: 800; border: none; border-radius: var(--radius); cursor: pointer; font-family: inherit; background: var(--primary); color: #fff; }
+    .home-action-btn.sub { background: var(--card); color: var(--primary-dark); border: 2px solid var(--primary); }
+    .home-action-btn:active { transform: scale(.97); opacity: .85; }
+
+    /* ── 種目画面：レベル一覧 ── */
+    .op-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .qcount-label { font-size: .85rem; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+    .qcount-bar { display: flex; gap: 8px; }
+    .qcount-btn { flex: 1; padding: 10px 0; border: 2px solid var(--line); background: var(--card); border-radius: 12px; font-size: 1rem; font-weight: 800; color: var(--muted); cursor: pointer; font-family: inherit; }
+    .qcount-btn.active { border-color: var(--primary); color: var(--primary-dark); background: var(--primary-soft); }
+    .level-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .level-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .level-name { font-size: 1.1rem; font-weight: 900; }
+    .level-prog { font-size: .78rem; color: var(--muted); font-weight: 700; }
+    .sheet-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }   /* 1レベル4枚を1行に */
+    .sheet-btn { border: 2px solid var(--line); background: #f8fafc; border-radius: 12px; padding: 10px 2px 8px; min-width: 0; cursor: pointer; font-family: inherit; color: var(--text); text-align: center; }
+    .sheet-btn:active { transform: scale(.96); }
+    .sheet-btn .s-label { font-size: .95rem; font-weight: 800; display: block; }
+    .sheet-btn .s-sub { font-size: .7rem; color: var(--muted); font-weight: 700; display: block; margin-top: 2px; }
+    .sheet-btn.r1 { border-color: #9cc3e8; }
+    .sheet-btn.r2 { border-color: var(--accent); background: #fff8e6; }
+    .sheet-btn.r3 { border-color: var(--success); background: #e8f8ee; }
+    .one-btn { width: 100%; padding: 12px; border: none; border-radius: 12px; background: var(--primary-soft); color: var(--primary-dark); font-size: .95rem; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .dummy-tag { font-size: .65rem; background: #fdecea; color: var(--error); border-radius: 6px; padding: 1px 6px; margin-left: 6px; vertical-align: middle; }
+    .legend { font-size: .78rem; color: var(--muted); line-height: 1.6; padding: 0 4px; }
+    .empty-note { background: var(--card); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--muted); font-weight: 700; line-height: 1.7; }
+
+    /* ── 出題画面（連続モード / 一問一答 共通） ── */
+    #run-screen { padding-bottom: 0; min-height: 100dvh; }
+    html, body { overscroll-behavior-y: none; }            /* iPhoneの引っぱって更新・バウンドを止める */
+    .run-body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }   /* 長押しの選択・ルーペを出さない */
+    .run-body { flex: 1; display: flex; flex-direction: column; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); gap: 10px; }
+    .run-status { display: flex; align-items: baseline; justify-content: space-between; }
+    .run-count { font-size: .95rem; font-weight: 800; color: var(--muted); }
+    .run-timer { font-size: 2rem; font-weight: 900; color: var(--primary-dark); font-variant-numeric: tabular-nums; }
+    .run-target { font-size: .8rem; color: var(--muted); font-weight: 700; text-align: right; }
+    .run-target .over { color: var(--error); text-decoration: line-through; }
+    .progress-track { height: 8px; background: #e6ebf0; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 10px; transition: width .2s; }
+    .problem-card { background: var(--card); border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 18px 14px; text-align: center; position: relative; }
+    .problem-text { font-size: 2.4rem; font-weight: 900; letter-spacing: .04em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .problem-text .op { color: var(--primary); margin: 0 .2em; }
+    .ans-row { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+    .ans-label { font-size: 1rem; font-weight: 800; color: var(--muted); }
+    .ans-box { min-width: 110px; padding: 10px 14px; border: 3px solid var(--line); border-radius: 14px; font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; background: #f8fafc; cursor: pointer; min-height: 62px; line-height: 1.2; }
+    .ans-box.rem { min-width: 80px; }
+    .ans-box.sm { min-width: 72px; padding: 8px 8px; font-size: 1.6rem; min-height: 54px; }
+    .ans-op { font-size: 1.5rem; font-weight: 900; color: var(--primary); }
+    .problem-hint { font-size: .85rem; font-weight: 800; color: var(--muted); min-height: 1.2em; margin-bottom: 4px; }
+    .start-inst { font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .start-ex { font-size: .9rem; margin-bottom: 10px; }
+    .ans-box.active { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px var(--primary-soft); }
+    .ans-box.shake { border-color: var(--error); animation: shake .3s; }
+    @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+    .feedback { min-height: 30px; text-align: center; font-size: 1.1rem; font-weight: 900; }
+    .feedback.ok { color: var(--success); } .feedback.ng { color: var(--error); }
+    .feedback small { font-size: .85rem; color: var(--muted); font-weight: 700; margin-left: 6px; }
+    .flash { animation: flash .25s; }
+    @keyframes flash { from { background: var(--primary-soft); } to { background: var(--card); } }
+    .keypad { margin-top: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .key { padding: 0; height: 60px; border: none; border-radius: 14px; background: var(--card); box-shadow: 0 2px 4px rgba(0,0,0,.1); font-size: 1.7rem; font-weight: 800; color: var(--text); cursor: pointer; font-family: inherit; user-select: none; touch-action: manipulation; }
+    .key:active { transform: scale(.95); background: #e9eef4; }
+    .key.fn { background: #e9eef4; font-size: 1.2rem; }
+    .key.enter { background: var(--primary); color: #fff; font-size: 1.15rem; }
+    .key.enter.next { background: #2e8b57; }
+    /* 低い画面（iPhone SE など）はテンキーが収まるように詰める */
+    @media (max-height: 720px) {
+      #run-header { padding-top: calc(env(safe-area-inset-top) + 10px); padding-bottom: 10px; }
+      .run-body { gap: 6px; padding-top: 8px; }
+      #play-area { gap: 6px !important; }
+      .run-timer { font-size: 1.6rem; }
+      .problem-card { padding: 10px 10px; }
+      .problem-text { font-size: 2rem; }
+      .ans-row { margin-top: 8px; }
+      .ans-box { min-height: 52px; font-size: 1.7rem; padding: 6px 12px; }
+      .ans-box.sm { min-height: 48px; font-size: 1.45rem; }
+      .feedback { min-height: 24px; font-size: 1rem; }
+      .keypad { gap: 6px; }
+      .key { height: 52px; }
+    }
+    .start-card { background: var(--card); border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 26px 20px; text-align: center; }
+    .start-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 8px; }
+    .start-info { color: var(--muted); font-weight: 700; line-height: 1.8; margin-bottom: 18px; }
+    .start-btn { width: 100%; padding: 18px; border: none; border-radius: var(--radius); background: var(--primary); color: #fff; font-size: 1.3rem; font-weight: 900; cursor: pointer; font-family: inherit; }
+
+    /* ── 結果 ── */
+    .result-card { background: var(--card); border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 22px 18px; text-align: center; }
+    .result-icon { font-size: 3.2rem; }
+    .result-rank { font-size: 1.5rem; font-weight: 900; margin: 4px 0; }
+    .result-rank.r3 { color: var(--success); } .result-rank.r2 { color: #d68910; } .result-rank.r1 { color: var(--primary-dark); } .result-rank.r0 { color: var(--error); }
+    .result-time { font-size: 2.4rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+    .result-detail { color: var(--muted); font-weight: 700; margin: 6px 0 14px; line-height: 1.6; }
+    .result-best { font-size: .85rem; color: var(--primary-dark); font-weight: 800; margin-bottom: 12px; }
+    .miss-list { text-align: left; margin: 0 0 14px; border-top: 1px solid #eef1f4; }
+    .miss-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; padding: 8px 2px; border-bottom: 1px solid #eef1f4; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .miss-row .yours { color: var(--error); text-decoration: line-through; margin-right: 6px; }
+    .miss-row .right { color: var(--success); }
+    .result-btns { display: flex; flex-direction: column; gap: 10px; }
+    .btn-main { padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-size: 1rem; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .btn-sub { padding: 14px; border: 2px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text); font-size: 1rem; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .mail-note { font-size: .8rem; color: var(--muted); font-weight: 700; margin-top: 10px; }
+
+    /* ── きろく（グラフ） ── */
+    .graph-body, .report-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
+    .graph-card { background: var(--card); border-radius: var(--radius); padding: 22px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .graph-card-title { font-size: 1rem; font-weight: 800; margin-bottom: 12px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat-box { background: var(--card); border-radius: 14px; padding: 14px 6px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .stat-val { font-size: 1.4rem; font-weight: 900; color: var(--primary-dark); }
+    .stat-lbl { font-size: .72rem; color: var(--muted); font-weight: 700; margin-top: 2px; }
+    .no-records { color: var(--muted); font-size: .9rem; text-align: center; padding: 16px 0; }
+    .pp-note { font-size: .8rem; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+    .pp-row { padding: 10px 0; border-bottom: 1px solid #eef1f4; }
+    .pp-row.me { background: #fffbea; margin: 0 -8px; padding: 10px 8px; border-radius: 10px; }
+    .pp-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-weight: 800; }
+    .pp-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .pp-me-tag { font-size: .7rem; background: var(--primary); color: #fff; border-radius: 6px; padding: 1px 6px; }
+    .pp-val { font-size: .8rem; color: var(--muted); }
+    .pp-track { height: 6px; background: #e6ebf0; border-radius: 10px; overflow: hidden; }
+    .pp-fill { height: 100%; background: var(--success); border-radius: 10px; transition: width .4s; }
+    .pp-mods { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .pp-mod { font-size: .72rem; background: #eef1f4; border-radius: 8px; padding: 2px 8px; font-weight: 700; color: var(--muted); }
+    .pp-mod.done { background: #e8f8ee; color: var(--success); }
+    .dots-row { display: flex; flex-wrap: wrap; gap: 6px; font-size: 1.3rem; }
+    .hist-wrap { overflow-x: auto; }
+    .hist-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .hist-table th { text-align: left; color: var(--muted); font-weight: 700; padding: 6px 4px; border-bottom: 2px solid #eef1f4; white-space: nowrap; }
+    .hist-table td { padding: 8px 4px; border-bottom: 1px solid #eef1f4; font-variant-numeric: tabular-nums; }
+    .hist-high { color: var(--success); font-weight: 800; } .hist-mid { color: #d68910; font-weight: 800; } .hist-low { color: var(--error); font-weight: 800; }
+    .reset-btn { background: none; border: 2px solid var(--line); color: var(--muted); border-radius: 12px; padding: 12px; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+    /* ── 進捗メール ── */
+    .fld-label { display: block; font-size: .85rem; font-weight: 800; color: var(--muted); margin-bottom: 6px; }
+    /* ★iOSで入力時に画面が拡大されないよう16px以上 */
+    .fld { width: 100%; font-size: 1.05rem; padding: 12px; border: 2px solid var(--line); border-radius: 12px; font-family: inherit; background: #f8fafc; }
+    .fld:focus { outline: none; border-color: var(--primary); }
+    .report-msg { margin-top: 12px; font-size: .9rem; font-weight: 800; min-height: 1.4em; }
+    .report-msg.ok { color: var(--success); } .report-msg.ng { color: var(--error); }
+    .report-preview { white-space: pre-wrap; font-size: .85rem; line-height: 1.7; background: #f8fafc; border-radius: 12px; padding: 12px; max-height: 340px; overflow-y: auto; }
+    .small-note { font-size: .78rem; color: var(--muted); line-height: 1.6; margin-top: 10px; }
+    .link-btn { background: none; border: none; color: var(--primary-dark); font-weight: 800; text-decoration: underline; cursor: pointer; font-family: inherit; font-size: .85rem; padding: 0; }
+
+    /* ── モーダル ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 300; }
+    .modal-box { background: #fff; border-radius: 20px; padding: 28px 22px 22px; width: 100%; max-width: 380px; max-height: 85vh; overflow-y: auto; }
+    .modal-box h3 { font-size: 1.2rem; margin-bottom: 8px; }
+    .modal-box p { font-size: .9rem; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .nickname-input { width: 100%; font-size: 1.1rem; padding: 12px; border: 2px solid var(--line); border-radius: 12px; margin-bottom: 14px; text-align: center; font-family: inherit; }
+    .nickname-ok-btn, .version-close-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-size: 1rem; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .version-entry { margin-bottom: 18px; }
+    .version-tag { display: flex; gap: 8px; align-items: baseline; margin-bottom: 6px; }
+    .version-num { font-weight: 900; } .version-date { font-size: .8rem; color: var(--muted); }
+    .version-entry.version-latest .version-num { color: var(--primary-dark); }
+    .version-items { padding-left: 1.2em; font-size: .9rem; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+<!-- ===== TOP ===== -->
+<div id="top-screen" class="screen active">
+  <div class="top-header">
+    <h1 id="app-title"></h1>
+    <p id="app-tagline"></p>
+    <div class="nickname-bar">
+      <span>あだな：<span class="nickname-name" id="nickname-display">（未設定）</span></span>
+      <button class="nickname-change-btn" onclick="showNicknameModal(true)">変える</button>
+    </div>
+    <div><button class="version-badge" id="version-badge" onclick="showVersionHistory()"></button></div>
+  </div>
+  <div class="categories-list" id="categories-list"></div>
+  <div class="top-actions">
+    <button class="home-action-btn" onclick="showGraph()">📊 きろく（グラフ）を見る</button>
+    <button class="home-action-btn sub" onclick="showReport()">📬 進捗をメールで送る</button>
+  </div>
+</div>
+
+<!-- ===== 種目（レベル・シート一覧） ===== -->
+<div id="op-screen" class="screen">
+  <div class="sub-header" id="op-header">
+    <button class="back-btn" onclick="goTop()">← もどる</button>
+    <h2 id="op-title"></h2>
+  </div>
+  <div class="op-body">
+    <div class="legend">
+      <b>連続モード</b>：シートの番号をおすと、そのシートを つづけて解いてタイムをはかります。<br>
+      <b>一問一答</b>：1問ずつ その場で答えあわせ。　しるし：✓＝ぜんもん正解　○＝○タイム以内　◎＝◎タイム以内
+    </div>
+    <div>
+      <div class="qcount-label">一問一答の問題数</div>
+      <div class="qcount-bar" id="qcount-bar"></div>
+    </div>
+    <div id="level-list" style="display:flex;flex-direction:column;gap:14px"></div>
+    <button class="home-action-btn sub" onclick="showGraph()">📊 この種目のきろく</button>
+  </div>
+</div>
+
+<!-- ===== 出題（連続モード / 一問一答） ===== -->
+<div id="run-screen" class="screen">
+  <div class="sub-header" id="run-header">
+    <button class="back-btn" id="run-back" onclick="quitRun()">← やめる</button>
+    <h2 id="run-title"></h2>
+  </div>
+  <div class="run-body">
+    <!-- スタート前 -->
+    <div class="start-card hidden" id="start-card">
+      <div class="start-title" id="start-title"></div>
+      <div class="start-info" id="start-info"></div>
+      <button class="start-btn" onclick="beginRun()">スタート ▶</button>
+    </div>
+    <!-- 出題中 -->
+    <div id="play-area" style="display:flex;flex-direction:column;gap:10px;flex:1">
+      <div class="run-status">
+        <span class="run-count" id="run-count"></span>
+        <span class="run-timer" id="run-timer">0:00</span>
+      </div>
+      <div class="run-target" id="run-target"></div>
+      <div class="progress-track"><div class="progress-fill" id="run-progress" style="width:0%"></div></div>
+      <div class="problem-card" id="problem-card">
+        <div class="problem-hint" id="problem-hint"></div>
+        <div class="problem-text" id="problem-text"></div>
+        <div class="ans-row" id="ans-row"></div>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="keypad" id="keypad"></div>
+    </div>
+    <!-- 結果 -->
+    <div class="result-card hidden" id="result-card">
+      <div class="result-icon" id="result-icon"></div>
+      <div class="result-rank" id="result-rank"></div>
+      <div class="result-time" id="result-time"></div>
+      <div class="result-detail" id="result-detail"></div>
+      <div class="result-best" id="result-best"></div>
+      <div class="miss-list" id="miss-list"></div>
+      <div class="result-btns">
+        <button class="btn-main" id="btn-retry" onclick="retryRun()">もういちど</button>
+        <button class="btn-sub hidden" id="btn-miss" onclick="practiceMisses()">まちがえた問題を一問一答で練習</button>
+        <button class="btn-sub" onclick="backToOp()">レベル一覧にもどる</button>
+      </div>
+      <div class="mail-note" id="mail-note"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GRAPH ===== -->
+<div id="graph-screen" class="screen">
+  <div class="sub-header">
+    <button class="back-btn" onclick="goBackFromGraph()">← もどる</button>
+    <h2 id="graph-title">きろく</h2>
+  </div>
+  <div class="graph-body">
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="g-total">0</div><div class="stat-lbl">合計問題数</div></div>
+      <div class="stat-box"><div class="stat-val" id="g-accuracy">-%</div><div class="stat-lbl">正答率</div></div>
+      <div class="stat-box"><div class="stat-val" id="g-great">0</div><div class="stat-lbl">◎のシート</div></div>
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title" id="g-progress-title"></div>
+      <div class="pp-note" id="g-progress-note"></div>
+      <div id="g-progress-list"></div>
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">📊 種目別 正答率</div>
+      <canvas id="g-acc-chart" height="180"></canvas>
+      <div id="g-acc-empty" class="no-records hidden">まだ きろくがありません</div>
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">📝 種目別 問題数</div>
+      <canvas id="g-cnt-chart" height="160"></canvas>
+      <div id="g-cnt-empty" class="no-records hidden">まだ きろくがありません</div>
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">📈 せいせきの推移</div>
+      <canvas id="g-line-chart" height="180"></canvas>
+      <div id="g-line-empty" class="no-records hidden">まだ きろくがありません</div>
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">さいきんの結果（あたらしい順）</div>
+      <div class="dots-row" id="g-dots"></div>
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">📋 履歴一覧</div>
+      <div class="hist-wrap"><table class="hist-table" id="g-history-table">
+        <thead><tr><th>日時</th><th>問題</th><th>せいせき</th><th>タイム</th></tr></thead>
+        <tbody id="g-history-body"></tbody>
+      </table></div>
+      <div id="g-history-empty" class="no-records hidden">まだ きろくがありません</div>
+    </div>
+    <button class="reset-btn" onclick="clearRecords()">きろくを リセットする</button>
+  </div>
+</div>
+
+<!-- ===== 進捗メール ===== -->
+<div id="report-screen" class="screen">
+  <div class="sub-header">
+    <button class="back-btn" onclick="goTop()">← もどる</button>
+    <h2>進捗メール</h2>
+  </div>
+  <div class="report-body">
+    <div class="graph-card">
+      <div class="graph-card-title">✉️ おくり先</div>
+      <label class="fld-label" for="report-email">メールアドレス（おうちの人）</label>
+      <input id="report-email" class="fld" type="email" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="parent@example.com" />
+      <label class="fld-label" for="report-freq" style="margin-top:14px">自動で送る間隔</label>
+      <select id="report-freq" class="fld"></select>
+      <div class="small-note" id="report-last"></div>
+      <button class="home-action-btn" style="margin-top:16px" id="report-send-btn" onclick="sendReportNow()">今すぐ送る</button>
+      <div class="report-msg" id="report-msg"></div>
+      <div class="small-note" id="report-note"></div>
+      <div class="small-note">うまく届かないときは <button class="link-btn" onclick="openMailApp()">メールアプリで送る</button></div>
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">📄 送られる内容（直近7日）</div>
+      <div class="report-preview" id="report-preview">よみこみ中…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== モーダル ===== -->
+<div class="overlay hidden" id="nickname-overlay">
+  <div class="modal-box">
+    <h3>👤 あだなを入れてね</h3>
+    <p id="nickname-note">記録をどの端末からでも見られるように使います</p>
+    <input class="nickname-input" type="text" id="nickname-input" maxlength="20" placeholder="例：しゅんすけ" />
+    <button class="nickname-ok-btn" onclick="confirmNickname()">OK</button>
+  </div>
+</div>
+<div class="overlay hidden" id="version-overlay" onclick="closeVersionModal(event)">
+  <div class="modal-box" id="version-modal">
+    <h3>📋 更新履歴</h3>
+    <div id="version-history-list" style="margin-top:14px"></div>
+    <button class="version-close-btn" onclick="closeVersionModal()">とじる</button>
+  </div>
+</div>
+
+<script>
+// =====================================================
+//  ★ アプリ設定
+// =====================================================
+const APP = {
+  id: 'keisan',                   // 半角英小文字・数字・ハイフンのみ。記録(theme)と進捗(app)の識別子
+  name: '計算道場',
+  emoji: '🧮',
+  tagline: 'はやく・正確に。タイムをちぢめよう。',
+  version: 'v0.3.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
+  buildTime: '202610101330',      // yyyymmddhhmm ★デプロイのたびに更新
+  color: '#2d6fb0',               // メインカラー
+  colorDark: '#1f5089',
+  clearCount: 3,                  // シートの達成度 1=ぜんもん正解 2=○タイム 3=◎タイム。3で「クリア」
+  runSize: 40,                    // 連続モードはシートを丸ごと解く（36問・18問）。これより多いシートだけ分割
+  qCounts: [5, 10, 20],           // 一問一答の問題数の選択肢
+  defaultQCount: 10,
+  reportFunction: 'keisan-report',  // 進捗メールを送る Edge Function 名
+  supabaseUrl: 'https://otorkvmcnhwspjwypurb.supabase.co',   // eitan-radar と同じプロジェクト
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90b3Jrdm1jbmh3c3Bqd3lwdXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNDg1MDMsImV4cCI6MjA5ODcyNDUwM30.gFXHoRaPUc2fT2ZkvUTSYJAh-TiPkRz-TI4LMpsI1lI',  // anon（公開前提）
+};
+
+// 更新履歴（新しい版を先頭に追加）
+const CHANGELOG = [
+  { version: 'v0.3.0', date: '2026-10-10', items: ['どのレベルもシートを4枚（X-1〜X-4）にそろえました（全144シート・4104問）', 'シートの番号を「4-1」の形に'] },
+  { version: 'v0.2.1', date: '2026-10-10', items: ['iPhone向け：とき中は画面が暗くならないように', '引っぱって更新・長押しの選択を出さないように', 'iPhone SE など小さい画面でもテンキーが収まるように'] },
+  { version: 'v0.2.0', date: '2026-10-10', items: ['問題集のデータ（79シート・2232問）を入れました', '「1のくらいだけ」「10のくらいだけ」「途中式つき」「あまりつき」の問題に対応', '連続モードはシートを丸ごと（36問・18問）解く形に'] },
+  { version: 'v0.1.1', date: '2026-10-10', items: ['進捗メールの自動送信を「間隔をえらぶ」方式に（おわるたび／1日1回／3日に1回／1週間に1回）'] },
+  { version: 'v0.1.0', date: '2026-10-08', items: ['計算道場をつくりました（連続モード・一問一答・タイマー・テンキー入力・進捗メール）'] },
+];
+
+// =====================================================
+//  基盤：ユーティリティ / Supabase / 保存
+// =====================================================
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const K = (n) => `${APP.id}:${n}`;
+function lsGet(key, fallback) { try { return JSON.parse(localStorage.getItem(K(key))) ?? fallback; } catch { return fallback; } }
+function lsSet(key, val) { try { localStorage.setItem(K(key), JSON.stringify(val)); } catch (e) { console.warn(e); } }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = randInt(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const pad2 = (n) => String(n).padStart(2, '0');
+function parseTime(s) {                         // '1:50' → 110秒
+  if (s == null || s === '') return null;
+  if (typeof s === 'number') return s;
+  const m = String(s).match(/^(\d+):(\d{1,2})$/);
+  return m ? +m[1] * 60 + +m[2] : null;
+}
+function fmtTime(sec, withTenth) {             // 83.4 → '1:23' / '1:23.4'
+  if (sec == null || isNaN(sec)) return '-';
+  const t = withTenth ? Math.floor(sec * 10) / 10 : Math.floor(sec);
+  const m = Math.floor(t / 60), s = t - m * 60;
+  return `${m}:${withTenth ? s.toFixed(1).padStart(4, '0') : pad2(s)}`;
+}
+
+const SYNC_ENABLED = !APP.supabaseUrl.startsWith('YOUR_') && typeof supabase !== 'undefined';
+const sb = SYNC_ENABLED ? supabase.createClient(APP.supabaseUrl, APP.supabaseKey) : null;
+const THEME_PREFIX = APP.id + ':';       // drill_records.theme = "keisan:種目:lvNN:シート(s1 / s1-2) or q"
+
+// =====================================================
+//  種目（モジュール）。答えの計算と表示のしかたを持つ
+// =====================================================
+const modules = [];
+function registerModule(mod) { modules.push(mod); }
+// stepSep = 途中式（S/S3/K）の2つの数をつなぐ記号（例: 67+22 = 80 + 9 = 89 / 67-28 = 47 − 8 = 39）
+registerModule({ id: 'tashizan', name: 'たし算', icon: '➕', sym: '+', color: '#2d6fb0', stepSep: '+', solve: (a, b) => a + b });
+registerModule({ id: 'hikizan',  name: 'ひき算', icon: '➖', sym: '−', color: '#2e8b57', stepSep: '−', solve: (a, b) => a - b });
+registerModule({ id: 'kakezan',  name: 'かけ算', icon: '✖️', sym: '×', color: '#d35400', stepSep: '+', solve: (a, b) => a * b });
+registerModule({ id: 'warizan',  name: 'わり算', icon: '➗', sym: '÷', color: '#8e44ad', solve: (a, b) => Math.floor(a / b) });
+function moduleById(id) { return modules.find((m) => m.id === id); }
+
+// 問題の形式（problems.js の mode）。fields = 入力する枠（左から順に入れる）
+const MODES = {
+  N:   { fields: ['ans'] },
+  O1:  { fields: ['ans'], hint: '1のくらい' },
+  T10: { fields: ['ans'], hint: '10のくらい' },
+  R:   { fields: ['ans', 'rem'] },
+  S:   { fields: ['s1', 's2', 'ans'] },
+  S3:  { fields: ['s1', 's2', 'ans'] },
+  K:   { fields: ['s1', 's2', 'ans'] },
+};
+// 問題オブジェクト { op, a, b, mode, fields, ans:{枠: 正解} }
+// p の1行: N,O1,T10 → [a, b, 答え]  R → [a, b, 商, あまり]  S,S3,K → [a, b, 答え, 途中1, 途中2]
+function makeProblem(op, row, mode) {
+  const m = moduleById(op), [a, b] = row;
+  mode = MODES[mode] ? mode : (op === 'warizan' && a % b ? 'R' : 'N');
+  const ans = { ans: row[2] ?? m.solve(a, b) };
+  if (mode === 'R') ans.rem = row[3] ?? a % b;
+  if (MODES[mode].fields.includes('s1')) { ans.s1 = row[3]; ans.s2 = row[4]; }
+  return { op, a, b, mode, fields: MODES[mode].fields, ans };
+}
+function problemText(q) { const m = moduleById(q.op); return `${q.a} ${m.sym} ${q.b}`; }
+// 答えの書き方（v = {枠: 値}）。正解の表示にも、まちがえた答えの表示にも使う
+function fmtAnswer(q, v) {
+  const s = (k) => (v[k] ?? v[k] === 0 ? String(v[k]) : '？');
+  if (q.mode === 'R') return `${s('ans')} あまり ${s('rem')}`;
+  if (q.fields.includes('s1')) return `${s('s1')} ${moduleById(q.op).stepSep} ${s('s2')} = ${s('ans')}`;
+  return s('ans') + (MODES[q.mode].hint ? `（${MODES[q.mode].hint}）` : '');
+}
+function answerText(q) { return fmtAnswer(q, q.ans); }
+
+// シート → 連続モード1回ぶん（パート）。APP.runSize を超えるシートだけ分ける
+const PARTS = [];
+(function buildParts() {
+  (typeof SHEETS !== 'undefined' ? SHEETS : []).forEach((sh) => {
+    if (!moduleById(sh.op) || !Array.isArray(sh.p) || !sh.p.length || !sh.level || !sh.no) { console.warn('skip sheet', sh); return; }
+    const probs = sh.p.map((row) => makeProblem(sh.op, row, sh.mode));
+    const n = Math.ceil(probs.length / APP.runSize);
+    const good = parseTime(sh.good), great = parseTime(sh.great);
+    for (let k = 0; k < n; k++) {
+      const chunk = probs.slice(k * APP.runSize, (k + 1) * APP.runSize);
+      const ratio = chunk.length / probs.length;
+      const scale = (t) => (t == null ? null : n > 1 ? Math.round(t * ratio / 5) * 5 : t);   // 分割したときは5秒単位で按分
+      const id = n > 1 ? `s${sh.no}-${k + 1}` : `s${sh.no}`;
+      const sub = n > 1 ? (n === 2 ? (k ? '後半' : '前半') : `${k + 1}/${n}`) : '';
+      PARTS.push({
+        op: sh.op, level: sh.level, no: sh.no, id, lv: 'lv' + pad2(sh.level),
+        key: `${sh.op}:lv${pad2(sh.level)}:${id}`,
+        label: `${sh.level}-${sh.no}${sub ? ' ' + sub : ''}`,
+        probs: chunk, good: scale(good), great: scale(great), scaled: n > 1, dummy: !!sh.dummy,
+        mode: probs[0].mode, instruction: sh.instruction || '', example: sh.example || '',
+      });
+    }
+  });
+  PARTS.sort((x, y) => x.op.localeCompare(y.op) || x.level - y.level || x.no - y.no || x.id.localeCompare(y.id));
+})();
+function partsOf(op, level) { return PARTS.filter((p) => p.op === op && (level == null || p.level === level)); }
+function levelsOf(op) { return [...new Set(partsOf(op).map((p) => p.level))].sort((a, b) => a - b); }
+function partByKey(key) { return PARTS.find((p) => p.key === key); }
+
+// 記録の theme から表示名を作る（keisan:warizan:lv08:s1 → わり算 8-①）
+function recLabel(r) {
+  const m = moduleById(r.moduleId), lvNum = parseInt(String(r.level || '').replace('lv', ''), 10);
+  if (r.tag === 'q') return `${m ? m.name : r.moduleId} Lv${lvNum || '?'} 一問一答`;
+  const p = partByKey(`${r.moduleId}:${r.level}:${r.tag}`);
+  return `${m ? m.name : r.moduleId} ${p ? p.label : (lvNum || '?') + '-' + (r.tag || '')}`;
+}
+
+// =====================================================
+//  状態
+// =====================================================
+let qCount = lsGet('qcount', APP.defaultQCount);
+let activeOp = null;
+let progressMap = {};                            // パートkey → 達成度(0〜3)
+let run = null;                                  // 出題中の状態（startRun / startOne で作る）
+
+// =====================================================
+//  あだな
+// =====================================================
+function getNickname() { return localStorage.getItem(K('nickname')) || ''; }
+function updateNicknameBar() { $('nickname-display').textContent = getNickname() || '（未設定）'; }
+function showNicknameModal(isChange) {
+  $('nickname-input').value = isChange ? getNickname() : '';
+  $('nickname-overlay').classList.remove('hidden');
+  setTimeout(() => $('nickname-input').focus(), 50);
+}
+function confirmNickname() {
+  const name = $('nickname-input').value.trim();
+  if (!name) { $('nickname-input').focus(); return; }
+  localStorage.setItem(K('nickname'), name);
+  progressMap = {};                              // プレイヤーが変わるので読み直す
+  $('nickname-overlay').classList.add('hidden');
+  updateNicknameBar(); renderTop(); loadMyProgress();
+}
+$('nickname-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmNickname(); });
+
+// =====================================================
+//  更新履歴
+// =====================================================
+function showVersionHistory() {
+  $('version-history-list').innerHTML = CHANGELOG.map((e, i) => `
+    <div class="version-entry${i === 0 ? ' version-latest' : ''}">
+      <div class="version-tag"><span class="version-num">${esc(e.version)}</span><span class="version-date">${esc(e.date)}</span></div>
+      <ul class="version-items">${e.items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+    </div>`).join('');
+  $('version-overlay').classList.remove('hidden');
+}
+function closeVersionModal(e) {
+  if (e && $('version-modal').contains(e.target)) return;
+  $('version-overlay').classList.add('hidden');
+}
+
+// =====================================================
+//  進捗（シートごとの最高達成度。1=ぜんもん正解 2=○ 3=◎）
+//  正は Supabase（drill_progress）。未設定時は localStorage
+// =====================================================
+function clearedIn(map, op, min = APP.clearCount) {
+  const keys = new Set(partsOf(op).map((p) => p.key));
+  return Object.keys(map).filter((k) => keys.has(k) && map[k] >= min).length;
+}
+function moduleProgress(op, map) {
+  const total = partsOf(op).length, cleared = clearedIn(map || progressMap, op);
+  return { cleared, total, pct: total ? Math.round(cleared / total * 100) : 0 };
+}
+function bumpBest(key, rank) {
+  const prev = progressMap[key] || 0;
+  if (rank <= prev) return { prev, next: prev, improved: false };
+  progressMap[key] = rank; pushProgress(key, rank);
+  return { prev, next: rank, improved: true };
+}
+async function pushProgress(key, count) {
+  if (!sb) { lsSet('progress', progressMap); return; }
+  const user = getNickname(); if (!user) return;
+  try {
+    const { error } = await sb.from('drill_progress').upsert(
+      { user_id: user, app: APP.id, item_key: key, count, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,app,item_key' });
+    if (error) throw error;
+  } catch (e) { console.warn('progress save failed', e.message); lsSet('progress', progressMap); }
+}
+async function loadMyProgress() {
+  if (!sb) { progressMap = lsGet('progress', {}); renderTop(); return; }
+  const user = getNickname(); if (!user) return;
+  try {
+    const { data, error } = await sb.from('drill_progress').select('item_key, count').eq('user_id', user).eq('app', APP.id);
+    if (error || !data) { progressMap = lsGet('progress', {}); renderTop(); return; }
+    progressMap = {}; data.forEach((r) => { progressMap[r.item_key] = r.count; });   // Supabaseが正
+    renderTop(); if (activeOp && $('op-screen').classList.contains('active')) renderOp();
+  } catch (e) { console.warn('progress load failed', e.message); }
+}
+async function loadAllProgress() {
+  if (!sb) return [];
+  try {
+    const { data, error } = await sb.from('drill_progress').select('user_id, item_key, count').eq('app', APP.id);
+    return error || !data ? [] : data;
+  } catch (e) { return []; }
+}
+async function renderPlayersProgress() {
+  const scope = activeOp ? [activeOp] : modules.map((m) => m.id);
+  const total = scope.reduce((s, id) => s + partsOf(id).length, 0);
+  $('g-progress-title').textContent = '🏅 みんなの進捗（◎タイムでクリア）';
+  $('g-progress-note').textContent = `${activeOp ? moduleById(activeOp).name + ' の ' : 'ぜんぶで '}${total}シート`;
+  const list = $('g-progress-list');
+  list.innerHTML = '<div class="pp-note">よみこみ中…</div>';
+
+  const me = getNickname(), meKey = me || '（あなた）';
+  const maps = new Map([[meKey, progressMap]]);  // 自分は端末の最新を使う
+  (await loadAllProgress()).forEach((r) => {
+    if (r.user_id === me) return;
+    if (!maps.has(r.user_id)) maps.set(r.user_id, {});
+    maps.get(r.user_id)[r.item_key] = r.count;
+  });
+  const players = [...maps.entries()].map(([name, map]) => {
+    const per = scope.map((id) => ({ m: moduleById(id), p: moduleProgress(id, map) })).filter((x) => x.p.total);
+    const cleared = per.reduce((s, x) => s + x.p.cleared, 0);
+    return { name, cleared, pct: total ? Math.round(cleared / total * 100) : 0, per, isMe: name === meKey };
+  }).sort((a, b) => b.cleared - a.cleared);
+  const medals = ['🥇', '🥈', '🥉'];
+  list.innerHTML = players.map((p, i) => `
+    <div class="pp-row${p.isMe ? ' me' : ''}">
+      <div class="pp-head"><span>${medals[i] || '　'}</span><span class="pp-name">${esc(p.name)}</span>
+        ${p.isMe ? '<span class="pp-me-tag">あなた</span>' : ''}<span class="pp-val">${p.pct}%（${p.cleared}/${total}）</span></div>
+      <div class="pp-track"><div class="pp-fill" style="width:${p.pct}%"></div></div>
+      <div class="pp-mods">${p.per.map((x) => `<span class="pp-mod${x.p.cleared >= x.p.total ? ' done' : ''}">${x.m.icon} ${x.p.cleared}/${x.p.total}</span>`).join('')}</div>
+    </div>`).join('') + (sb ? '' : '<div class="pp-note">※ Supabase未設定のため、この端末の記録だけ表示しています</div>');
+}
+
+// =====================================================
+//  画面遷移
+// =====================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
+  window.scrollTo(0, 0);
+}
+function goTop() { stopTimer(); run = null; destroyCharts(); activeOp = null; renderTop(); showScreen('top-screen'); }
+function goBackFromGraph() { destroyCharts(); if (activeOp) backToOp(); else goTop(); }
+function showOp(id) { activeOp = id; renderOp(); showScreen('op-screen'); }
+function backToOp() { stopTimer(); run = null; if (activeOp) { renderOp(); showScreen('op-screen'); } else goTop(); }
+
+function renderTop() {
+  $('categories-list').innerHTML = '';
+  modules.forEach((m) => {
+    const p = moduleProgress(m.id), lvs = levelsOf(m.id), ok = clearedIn(progressMap, m.id, 2);
+    const card = document.createElement('div');
+    card.className = 'category-card' + (p.total ? '' : ' empty'); card.style.borderLeftColor = m.color;
+    card.innerHTML = `<div class="cat-icon">${m.icon}</div>
+      <div class="cat-info"><div class="cat-name">${esc(m.name)}</div>
+      <div class="cat-desc">${lvs.length ? `レベル ${lvs[0]}${lvs.length > 1 ? '〜' + lvs[lvs.length - 1] : ''}・${p.total}シート` : 'もんだい じゅんび中'}</div>
+      ${p.total ? `<div class="cat-prog">◎ ${p.cleared}/${p.total}　○以上 ${ok}/${p.total}</div>` : ''}</div><div class="cat-arrow">›</div>`;
+    card.onclick = () => showOp(m.id);
+    $('categories-list').appendChild(card);
+  });
+}
+function renderQCountBar() {
+  $('qcount-bar').innerHTML = '';
+  APP.qCounts.forEach((n) => {
+    const b = document.createElement('button');
+    b.className = 'qcount-btn' + (n === qCount ? ' active' : ''); b.textContent = n + '問';
+    b.onclick = () => { qCount = n; lsSet('qcount', n); renderOp(); };
+    $('qcount-bar').appendChild(b);
+  });
+}
+const RANK_MARK = ['', '✓', '○', '◎'];
+function renderOp() {
+  const m = moduleById(activeOp);
+  $('op-header').style.background = m.color;
+  $('op-title').textContent = `${m.icon} ${m.name}`;
+  renderQCountBar();
+  const list = $('level-list');
+  const lvs = levelsOf(activeOp);
+  if (!lvs.length) { list.innerHTML = '<div class="empty-note">この種目の問題は まだありません。<br>problems.js に追加すると ここに出ます。</div>'; return; }
+  list.innerHTML = lvs.map((lv) => {
+    const ps = partsOf(activeOp, lv);
+    const done = ps.filter((p) => (progressMap[p.key] || 0) >= APP.clearCount).length;
+    return `<div class="level-card">
+      <div class="level-head"><span class="level-name">レベル ${lv}${ps.some((p) => p.dummy) ? '<span class="dummy-tag">サンプル</span>' : ''}</span>
+        <span class="level-prog">◎ ${done}/${ps.length}</span></div>
+      <div class="sheet-list">${ps.map((p) => {
+        const r = progressMap[p.key] || 0;
+        return `<button class="sheet-btn r${r}" onclick="startRun('${p.key}')"><span class="s-label">${esc(p.label)} ${RANK_MARK[r]}</span>
+          <span class="s-sub">${p.probs.length}問${p.great != null ? ' ◎' + fmtTime(p.great) : ''}</span></button>`;
+      }).join('')}</div>
+      <button class="one-btn" onclick="startOne('${activeOp}', ${lv})">🎯 レベル${lv}を 一問一答（${qCount}問）</button>
+    </div>`;
+  }).join('');
+}
+
+// =====================================================
+//  出題エンジン（連続モード / 一問一答）
+//  run = { mode:'run'|'one', op, level, part, qs, idx, results:[{q, main, rem, ok, sec}], started, t0, qT0 }
+// =====================================================
+let timerId = null;
+function startTimer() { if (timerId) clearInterval(timerId); timerId = setInterval(tick, 100); keepAwake(true); }
+function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } keepAwake(false); }
+// 出題中は iPhone の画面が暗くならないようにする（Screen Wake Lock。iOS 16.4+ / 非対応なら何もしない）
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && !wakeLock && 'wakeLock' in navigator && document.visibilityState === 'visible') {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) { wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && timerId) keepAwake(true); });   // 戻ってきたら取り直す
+function elapsed() { return run && run.t0 ? (performance.now() - run.t0) / 1000 : 0; }
+function tick() {
+  if (!run) return;
+  const t = elapsed();
+  $('run-timer').textContent = run.mode === 'run' ? fmtTime(t) : fmtTime((performance.now() - run.qT0) / 1000, true);
+  if (run.mode === 'run' && run.part) {
+    const p = run.part, cls = (lim) => (lim != null && t > lim ? ' class="over"' : '');
+    $('run-target').innerHTML = [p.great != null ? `<span${cls(p.great)}>◎ ${fmtTime(p.great)}</span>` : '', p.good != null ? `<span${cls(p.good)}>○ ${fmtTime(p.good)}</span>` : ''].filter(Boolean).join('　') + (p.scaled ? '（目安）' : '');
+  }
+}
+
+function startRun(key) {
+  const part = partByKey(key); if (!part) return;
+  activeOp = part.op;
+  run = { mode: 'run', op: part.op, level: part.level, part, qs: part.probs.slice(), idx: 0, results: [], started: false };
+  const m = moduleById(part.op);
+  $('run-header').style.background = m.color;
+  $('run-title').textContent = `${m.name} ${part.label}`;
+  $('start-title').textContent = `${m.icon} ${m.name} ${part.label}`;
+  $('start-info').innerHTML =
+    (part.instruction ? `<div class="start-inst">${esc(part.instruction)}</div>` : '') +
+    (part.example ? `<div class="start-ex">（れい）${esc(fmtExample(part.example))}</div>` : '') +
+    `${run.qs.length}問を つづけて解こう<br>` +
+    (part.great != null ? `◎タイム ${fmtTime(part.great)}　` : '') + (part.good != null ? `○タイム ${fmtTime(part.good)}` : '') +
+    (part.scaled ? '<br><small>（シートを分けたので タイムは目安）</small>' : '') +
+    (progressMap[part.key] ? `<br>いまの記録：${RANK_MARK[progressMap[part.key]]}` : '') +
+    (part.probs[0].fields.length > 1 ? `<br><small>左の枠から じゅんに入れて「けってい」</small>` : '');
+  $('start-card').classList.remove('hidden');
+  $('play-area').classList.add('hidden'); $('result-card').classList.add('hidden');
+  $('run-back').textContent = '← やめる'; showScreen('run-screen');
+}
+function beginRun() {
+  $('start-card').classList.add('hidden'); $('play-area').classList.remove('hidden');
+  run.started = true; run.t0 = performance.now();
+  startTimer();
+  showProblem();
+}
+
+function startOne(op, level, list) {
+  activeOp = op;
+  const pool = list || partsOf(op, level).flatMap((p) => p.probs);
+  if (!pool.length) return;
+  const n = list ? list.length : qCount;
+  // 同じ問題が続かないように並べる（プールが少ないときはくり返す）
+  let qs = [];
+  while (qs.length < n) qs = qs.concat(shuffle(pool));
+  qs = qs.slice(0, n);
+  for (let i = 1; i < qs.length; i++) if (qs[i] === qs[i - 1] && i + 1 < qs.length) [qs[i], qs[i + 1]] = [qs[i + 1], qs[i]];
+  run = { mode: 'one', op, level, qs, idx: 0, results: [], started: true, t0: performance.now(), retryList: list || null };
+  const m = moduleById(op);
+  $('run-header').style.background = m.color;
+  $('run-title').textContent = `${m.name} Lv${level} 一問一答${list ? '（まちがい）' : ''}`;
+  $('run-target').innerHTML = '';
+  $('start-card').classList.add('hidden'); $('result-card').classList.add('hidden'); $('play-area').classList.remove('hidden');
+  $('run-back').textContent = '← やめる'; showScreen('run-screen');
+  startTimer();
+  showProblem();
+}
+
+// ---------- 1問の表示と入力 ----------
+// inp.vals = {枠: 入力中の文字列}、inp.fi = いま入れている枠の番号
+let inp = { vals: {}, fi: 0, locked: false };
+const curQ = () => run && run.qs[run.idx];
+const curField = () => curQ().fields[inp.fi];
+function fmtExample(s) { return s.replace(/\*/g, '×').replace(/\//g, '÷').replace(/-/g, '−').replace(/(\d)r(\d)/, '$1 あまり $2'); }
+function showProblem() {
+  const q = curQ();
+  inp = { vals: Object.fromEntries(q.fields.map((f) => [f, ''])), fi: 0, locked: false };
+  run.qT0 = performance.now();
+  const m = moduleById(q.op);
+  $('problem-text').innerHTML = `${q.a}<span class="op">${m.sym}</span>${q.b}<span class="op">=</span>`;
+  const hint = MODES[q.mode].hint, part = run.part || partsOf(q.op, run.level).find((p) => p.mode === q.mode);
+  $('problem-hint').textContent = hint ? `${hint}だけ こたえる` : (q.fields.includes('s1') && part ? `（れい）${fmtExample(part.example)}` : '');
+  $('run-count').textContent = `${run.idx + 1} / ${run.qs.length}問`;
+  $('run-progress').style.width = (run.idx / run.qs.length * 100) + '%';
+  $('feedback').textContent = ''; $('feedback').className = 'feedback';
+  renderAnswer(); renderKeypad(false); tick();
+  const card = $('problem-card'); card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+}
+function renderAnswer() {
+  const q = curQ(), small = q.fields.length >= 3 ? ' sm' : '';
+  const box = (f, i) => `<div class="ans-box${small}${f === 'rem' ? ' rem' : ''}${i === inp.fi ? ' active' : ''}" id="box-${f}" onclick="setField(${i})">${esc(inp.vals[f]) || '&nbsp;'}</div>`;
+  let html;
+  if (q.mode === 'R') html = box('ans', 0) + `<span class="ans-label">あまり</span>` + box('rem', 1);
+  else if (q.fields.includes('s1')) { const sep = `<span class="ans-op">${moduleById(q.op).stepSep}</span>`; html = box('s1', 0) + sep + box('s2', 1) + `<span class="ans-op">=</span>` + box('ans', 2); }
+  else html = box('ans', 0);
+  $('ans-row').innerHTML = html;
+}
+function setField(i) { if (inp.locked) return; inp.fi = i; renderAnswer(); renderKeypad(false); }
+function renderKeypad(nextMode) {
+  const keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', 'BS', '0', 'OK'];
+  const last = !run || !curQ() || inp.fi >= curQ().fields.length - 1;
+  $('keypad').innerHTML = keys.map((k) => {
+    if (k === 'BS') return `<button class="key fn" data-k="BS" aria-label="けす">⌫</button>`;
+    if (k === 'OK') return `<button class="key enter${nextMode ? ' next' : ''}" data-k="OK">${nextMode ? 'つぎへ ▶' : (last ? 'けってい' : (curQ().fields[inp.fi + 1] === 'rem' ? 'あまりへ ▶' : 'となりへ ▶'))}</button>`;
+    return `<button class="key" data-k="${k}">${k}</button>`;
+  }).join('');
+}
+// pointerdown で反応させる（スマホでの連打を速く・ダブルタップ拡大を防ぐ）
+$('keypad').addEventListener('pointerdown', (e) => {
+  const b = e.target.closest('.key'); if (!b) return;
+  e.preventDefault(); pressKey(b.dataset.k);
+});
+function pressKey(k) {
+  if (!run || !run.started || !$('run-screen').classList.contains('active') || !$('result-card').classList.contains('hidden')) return;
+  if (inp.locked) { if (k === 'OK') nextOne(); return; }
+  const f = curField(), v = inp.vals[f];
+  if (k === 'BS') { inp.vals[f] = v.slice(0, -1); }
+  else if (k === 'OK') { submitAnswer(); return; }
+  else if (/^\d$/.test(k)) { if (v.length < 7) inp.vals[f] = (v === '0' ? '' : v) + k; }
+  renderAnswer(); renderKeypad(false);
+}
+function shakeBox(f) { const el = $('box-' + f); if (el) { el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 350); } }
+function submitAnswer() {
+  const q = curQ();
+  if (inp.vals[curField()] === '') { shakeBox(curField()); return; }
+  if (inp.fi < q.fields.length - 1) { setField(inp.fi + 1); return; }      // 左の枠から順に
+  const blank = q.fields.findIndex((f) => inp.vals[f] === '');
+  if (blank >= 0) { setField(blank); shakeBox(q.fields[blank]); return; }
+  const vals = Object.fromEntries(q.fields.map((f) => [f, parseInt(inp.vals[f], 10)]));
+  const ok = q.fields.every((f) => vals[f] === q.ans[f]);
+  const sec = (performance.now() - run.qT0) / 1000;
+  run.results.push({ q, vals, ok, sec });
+
+  if (run.mode === 'run') {                       // 連続モード：その場では正誤を出さず次へ
+    run.idx++;
+    if (run.idx >= run.qs.length) finishRun(); else showProblem();
+    return;
+  }
+  // 一問一答：その場で答えあわせ
+  inp.locked = true;
+  const fb = $('feedback');
+  fb.className = 'feedback ' + (ok ? 'ok' : 'ng');
+  fb.innerHTML = (ok ? '⭕ せいかい！' : `❌ こたえ ${esc(answerText(q))}`) + `<small>${sec.toFixed(1)}秒</small>`;
+  $('run-progress').style.width = ((run.idx + 1) / run.qs.length * 100) + '%';
+  if (ok) setTimeout(() => { if (run && run.mode === 'one' && inp.locked && run.results.length === run.idx + 1) nextOne(); }, 650);
+  else renderKeypad(true);
+}
+function nextOne() {
+  if (!run || !inp.locked) return;
+  run.idx++;
+  if (run.idx >= run.qs.length) finishRun(); else showProblem();
+}
+function quitRun() {
+  if (run && run.started && run.results.length && $('result-card').classList.contains('hidden') && !confirm('とちゅうで やめますか？（きろくは のこりません）')) return;
+  backToOp();
+}
+
+// 物理キーボード：数字 / Backspace / Enter / Tab・←→（枠の切りかえ）
+document.addEventListener('keydown', (e) => {
+  if (!$('run-screen').classList.contains('active') || !run) return;
+  if (!run.started) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); beginRun(); } return; }
+  if (/^\d$/.test(e.key)) { e.preventDefault(); pressKey(e.key); }
+  else if (e.key === 'Backspace') { e.preventDefault(); pressKey('BS'); }
+  else if (e.key === 'Enter') { e.preventDefault(); pressKey('OK'); }
+  else if ((e.key === 'Tab' || e.key === 'ArrowRight' || e.key === 'ArrowLeft') && curQ() && curQ().fields.length > 1 && !inp.locked) {
+    e.preventDefault();
+    const n = curQ().fields.length, back = e.key === 'ArrowLeft' || (e.key === 'Tab' && e.shiftKey);
+    setField((inp.fi + (back ? n - 1 : 1)) % n);
+  }
+});
+
+// ---------- 結果 ----------
+function rankOf(part, correct, total, sec) {
+  if (correct < total) return 0;
+  if (part && part.great != null && sec <= part.great) return 3;
+  if (part && part.good != null && sec <= part.good) return 2;
+  return 1;
+}
+async function finishRun() {
+  stopTimer();
+  const sec = Math.round(elapsed() * 10) / 10;
+  const total = run.results.length, correct = run.results.filter((r) => r.ok).length;
+  const misses = run.results.filter((r) => !r.ok);
+  $('play-area').classList.add('hidden'); $('result-card').classList.remove('hidden'); $('run-back').textContent = '← もどる';
+
+  let rank = 0, best = null;
+  if (run.mode === 'run') {
+    rank = rankOf(run.part, correct, total, sec);
+    best = bumpBest(run.part.key, rank);
+    const icons = ['💪', '👍', '⭕', '🎉'], names = ['もういちど チャレンジ！', 'ぜんもん正解！', '○タイム たっせい！', '◎タイム たっせい！'];
+    $('result-icon').textContent = icons[rank];
+    $('result-rank').textContent = names[rank]; $('result-rank').className = 'result-rank r' + rank;
+    $('result-time').textContent = fmtTime(sec, true);
+    const p = run.part;
+    $('result-detail').innerHTML = `${total}問中 ${correct}問正解` +
+      (p.great != null || p.good != null ? `<br>◎ ${fmtTime(p.great)}　○ ${fmtTime(p.good)}${p.scaled ? '（目安）' : ''}` : '');
+    $('result-best').textContent = best.improved && best.prev ? `きろく こうしん！ ${RANK_MARK[best.prev]} → ${RANK_MARK[rank]}` : '';
+    $('btn-retry').textContent = 'もういちど（同じシート）';
+  } else {
+    const pct = Math.round(correct / total * 100), avg = run.results.reduce((s, r) => s + r.sec, 0) / total;
+    $('result-icon').textContent = pct === 100 ? '🎉' : pct >= 70 ? '😊' : '💪';
+    $('result-rank').textContent = pct === 100 ? 'パーフェクト！' : pct >= 70 ? 'よくできました！' : 'もういちど チャレンジ！';
+    $('result-rank').className = 'result-rank r' + (pct === 100 ? 3 : pct >= 70 ? 2 : 0);
+    $('result-time').textContent = fmtTime(sec, true);
+    $('result-detail').innerHTML = `${total}問中 ${correct}問正解（${pct}%）<br>1問 へいきん ${avg.toFixed(1)}秒`;
+    $('result-best').textContent = '';
+    $('btn-retry').textContent = `もういちど（${total}問）`;
+  }
+  $('miss-list').innerHTML = misses.map((r) => `<div class="miss-row"><span>${esc(problemText(r.q))} =</span>
+    <span><span class="yours">${esc(fmtAnswer(r.q, r.vals))}</span><span class="right">${esc(answerText(r.q))}</span></span></div>`).join('');
+  $('btn-miss').classList.toggle('hidden', !misses.length);
+  run.misses = misses.map((r) => r.q);
+  $('mail-note').textContent = '';
+  setTimeout(() => $('result-card').scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+
+  const tag = run.mode === 'run' ? run.part.id : 'q';
+  await saveSessionRecord(run.op, 'lv' + pad2(run.level), tag, total, correct, sec);
+  autoReport(run.mode);
+}
+function retryRun() {
+  if (!run) return;
+  if (run.mode === 'run') startRun(run.part.key);
+  else startOne(run.op, run.level, run.retryList);
+}
+function practiceMisses() { if (run && run.misses && run.misses.length) startOne(run.op, run.level, run.misses.slice()); }
+
+// =====================================================
+//  記録の保存 / 読み込み（drill_records：theme = "keisan:種目:lvNN:シート or q"、time_sec = かかった秒）
+// =====================================================
+async function saveSessionRecord(op, level, tag, total, correct, sec) {
+  const score = Math.round(correct / total * 100), played_at = new Date().toISOString();
+  const local = () => { const l = lsGet('records', []); l.push({ date: played_at, moduleId: op, level, tag, total, correct, score, time: sec }); lsSet('records', l); };
+  if (!sb) { local(); return; }
+  const user = getNickname(); if (!user) { local(); return; }
+  const row = { user_id: user, score, theme: `${THEME_PREFIX}${op}:${level}:${tag}`, played_at, total_q: total, time_sec: Math.round(sec) };
+  try {
+    let { error } = await sb.from('drill_records').insert(row);
+    if (error && /time_sec/.test(error.message)) {          // time_sec 列がまだ無いDB向け
+      delete row.time_sec; ({ error } = await sb.from('drill_records').insert(row));
+    }
+    if (error) throw error;
+  } catch (e) { console.warn('record save failed', e.message); local(); }
+}
+async function loadRecords() {
+  if (!sb) return lsGet('records', []);
+  const user = getNickname(); if (!user) return lsGet('records', []);
+  try {
+    const q = (cols) => sb.from('drill_records').select(cols).eq('user_id', user).like('theme', THEME_PREFIX + '%').order('played_at', { ascending: true });
+    let { data, error } = await q('played_at, score, theme, total_q, time_sec');
+    if (error) ({ data, error } = await q('played_at, score, theme, total_q'));
+    if (error || !data) return lsGet('records', []);          // テーブル未作成・通信エラー時は端末の記録
+    return data.map((r) => {
+      const [moduleId, level, tag] = r.theme.slice(THEME_PREFIX.length).split(':');
+      const total = r.total_q || 1;
+      return { date: r.played_at, moduleId, level, tag, total, correct: Math.round(r.score / 100 * total), score: r.score, time: r.time_sec ?? null };
+    });
+  } catch (e) { return lsGet('records', []); }
+}
+function recStats(recs) {
+  const total = recs.reduce((s, r) => s + r.total, 0), correct = recs.reduce((s, r) => s + r.correct, 0);
+  return { total, correct, pct: total ? Math.round(correct / total * 100) : null };
+}
+
+// =====================================================
+//  きろく（グラフ）
+// =====================================================
+let accChart = null, cntChart = null, lineChart = null;
+function destroyCharts() {
+  [accChart, cntChart, lineChart].forEach((c) => c && c.destroy());
+  accChart = cntChart = lineChart = null;
+}
+async function showGraph() {
+  $('graph-title').textContent = activeOp ? `${moduleById(activeOp).name} のきろく` : 'きろく（全体）';
+  showScreen('graph-screen');
+  renderPlayersProgress();
+  await renderGraph();
+}
+async function renderGraph() {
+  ['g-total', 'g-accuracy', 'g-great'].forEach((id) => { $(id).textContent = '…'; });
+  const scopeIds = activeOp ? [activeOp] : modules.map((m) => m.id);
+  const recs = (await loadRecords()).filter((r) => scopeIds.includes(r.moduleId));
+  const { total, pct } = recStats(recs);
+  $('g-total').textContent = total + '問';
+  $('g-accuracy').textContent = pct !== null ? pct + '%' : '-%';
+  $('g-great').textContent = scopeIds.reduce((s, id) => s + clearedIn(progressMap, id), 0);
+
+  $('g-dots').innerHTML = recs.length
+    ? recs.slice(-20).reverse().map((r) => `<span>${r.score === 100 ? '🎉' : r.score >= 70 ? '⭕' : '❌'}</span>`).join('')
+    : '<span class="no-records">まだ きろくがありません</span>';
+
+  destroyCharts();
+  const canv = { acc: $('g-acc-chart'), cnt: $('g-cnt-chart'), line: $('g-line-chart') };
+  const empt = { acc: $('g-acc-empty'), cnt: $('g-cnt-empty'), line: $('g-line-empty') };
+  const showEmpty = (msg) => Object.keys(canv).forEach((k) => { canv[k].style.display = 'none'; empt[k].textContent = msg; empt[k].classList.remove('hidden'); });
+
+  // 履歴表
+  $('g-history-body').innerHTML = recs.slice().reverse().slice(0, 30).map((r) => {
+    const d = new Date(r.date), ds = `${d.getMonth() + 1}/${d.getDate()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    const cls = r.score >= 100 ? 'hist-high' : r.score >= 80 ? 'hist-mid' : 'hist-low';
+    return `<tr><td>${ds}</td><td>${esc(recLabel(r))}</td>
+      <td class="${cls}">${r.correct}/${r.total}</td><td>${r.time != null ? fmtTime(r.time) : '-'}</td></tr>`;
+  }).join('');
+  $('g-history-table').style.display = recs.length ? '' : 'none';
+  $('g-history-empty').classList.toggle('hidden', recs.length > 0);
+
+  if (!recs.length) { showEmpty('まだ きろくがありません'); return; }
+  if (typeof Chart === 'undefined') { showEmpty('グラフはオンラインのときに表示されます'); return; }
+
+  const mods = scopeIds.map(moduleById);
+  const colors = mods.map((m) => m.color);
+  const labels = mods.map((m) => m.name);
+  Object.keys(canv).forEach((k) => { canv[k].style.display = ''; empt[k].classList.add('hidden'); });
+  const barOpts = (extra) => ({ plugins: { legend: { display: false } }, scales: { y: extra, x: { grid: { display: false } } } });
+
+  accChart = new Chart(canv.acc.getContext('2d'), { type: 'bar',
+    data: { labels, datasets: [{ data: mods.map((m) => recStats(recs.filter((r) => r.moduleId === m.id)).pct ?? 0), backgroundColor: colors, borderRadius: 10 }] },
+    options: barOpts({ min: 0, max: 100, ticks: { stepSize: 20, callback: (v) => v + '%' } }) });
+  cntChart = new Chart(canv.cnt.getContext('2d'), { type: 'bar',
+    data: { labels, datasets: [{ data: mods.map((m) => recStats(recs.filter((r) => r.moduleId === m.id)).total), backgroundColor: colors, borderRadius: 10 }] },
+    options: barOpts({ beginAtZero: true, ticks: { precision: 0 } }) });
+  const pts = recs.map((r) => r.score >= 100 ? '#27ae60' : r.score >= 70 ? '#f5a623' : '#e74c3c');
+  lineChart = new Chart(canv.line.getContext('2d'), { type: 'line',
+    data: { labels: recs.map((r, i) => { const d = new Date(r.date); return `${d.getMonth() + 1}/${d.getDate()} (${i + 1})`; }),
+      datasets: [{ data: recs.map((r) => r.score), borderColor: APP.color, backgroundColor: 'rgba(45,111,176,.1)', borderWidth: 2.5, pointBackgroundColor: pts, pointBorderColor: pts, pointRadius: 6, tension: .3, fill: true }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { callback: (v) => v + '%' } }, x: { ticks: { maxRotation: 45, font: { size: 10 } }, grid: { display: false } } } } });
+}
+async function clearRecords() {
+  if (!confirm('きろくと 進捗（シートの達成）を ぜんぶ けしますか？')) return;
+  progressMap = {};
+  lsSet('records', []); lsSet('progress', {});
+  if (sb && getNickname()) {
+    const u = getNickname();
+    try {
+      await sb.from('drill_records').delete().eq('user_id', u).like('theme', THEME_PREFIX + '%');
+      await sb.from('drill_progress').delete().eq('user_id', u).eq('app', APP.id);
+    } catch (e) { console.warn('delete failed', e.message); }
+  }
+  renderTop(); renderPlayersProgress(); await renderGraph();
+}
+
+// =====================================================
+//  進捗メール（eitan-radar の週間レポートを手本に）
+//  ・宛先はこの端末に保存（localStorage）。DBには保存しない
+//  ・送信は Edge Function（keisan-report）。本文はサーバー側で drill_records から作る
+//  ・うまく送れないときは mailto: でメールアプリに本文を渡す
+// =====================================================
+const okMail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+// 自動送信の間隔。サーバー側の定期実行はなく、アプリを使ったとき（起動時・練習の終了時）に「前回から間隔があいていたら」送る
+const REPORT_FREQS = [
+  { id: 'off',    label: '自動では送らない' },
+  { id: 'each',   label: '連続モードが おわるたび' },
+  { id: 'daily',  label: '1日1回' },
+  { id: '3days',  label: '3日に1回' },
+  { id: 'weekly', label: '1週間に1回' },
+];
+const FREQ_DAYS = { daily: 1, '3days': 3, weekly: 7 };
+function reportSettings() {
+  const s = lsGet('report', {});
+  return { email: s.email || '', freq: s.freq || (s.auto ? 'each' : 'off'), lastSent: s.lastSent || null };   // 旧版の auto:true は「おわるたび」
+}
+function setReportMsg(t, ok) { const e = $('report-msg'); e.textContent = t; e.className = 'report-msg ' + (ok ? 'ok' : 'ng'); }
+function renderLastSent() {
+  const s = reportSettings(), d = s.lastSent && new Date(s.lastSent);
+  $('report-last').textContent = d ? `前回の送信：${d.getMonth() + 1}/${d.getDate()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}` : 'まだ送信していません';
+}
+async function showReport() {
+  const s = reportSettings();
+  $('report-email').value = s.email;
+  $('report-freq').innerHTML = REPORT_FREQS.map((f) => `<option value="${f.id}"${f.id === s.freq ? ' selected' : ''}>${f.label}</option>`).join('');
+  renderLastSent();
+  $('report-msg').textContent = '';
+  $('report-note').textContent = sb
+    ? '※ いまは試験運用中のため、メール配信サービス（Resend）に登録したアドレスにだけ届きます。送信は1日5回まで。'
+    : '※ Supabase未設定のため、「メールアプリで送る」を使ってください。';
+  showScreen('report-screen');
+  $('report-preview').textContent = 'よみこみ中…';
+  $('report-preview').textContent = buildReportText(await loadRecords());
+}
+function saveReportSettings(patch) {
+  const s = { ...reportSettings(), ...(patch || {}) };
+  if ($('report-screen').classList.contains('active')) { s.email = $('report-email').value.trim(); s.freq = $('report-freq').value; }
+  lsSet('report', { email: s.email, freq: s.freq, lastSent: s.lastSent });
+  return s;
+}
+$('report-email').addEventListener('change', () => saveReportSettings());
+$('report-freq').addEventListener('change', () => {
+  const s = saveReportSettings(), f = REPORT_FREQS.find((x) => x.id === s.freq);
+  if (s.freq !== 'off' && !okMail(s.email)) setReportMsg('自動で送るには メールアドレスを入れてください', false);
+  else setReportMsg(s.freq === 'off' ? '自動送信を とめました' : `「${f.label}」で送ります（アプリを使ったときに送信）`, true);
+});
+
+// 直近7日のまとめ（プレビュー / mailto 用。メール本文はサーバー側でも同じ形で作る）
+function buildReportText(allRecs) {
+  const since = Date.now() - 7 * 86400000;
+  const recs = allRecs.filter((r) => new Date(r.date).getTime() >= since);
+  const name = getNickname() || 'あなた';
+  const L = [`🧮 ${name}さんの計算道場（直近7日）`, ''];
+  if (!recs.length) { L.push('この7日間の きろくは ありません。'); return L.join('\n'); }
+  const days = new Set(recs.map((r) => new Date(r.date).toLocaleDateString('ja-JP'))).size;
+  const st = recStats(recs), sec = recs.reduce((s, r) => s + (r.time || 0), 0);
+  L.push(`学習した日：${days}/7日`, `とりくんだ回数：${recs.length}回（${st.total}問）`, `正答率：${st.pct}%`, `計算した時間：${Math.round(sec / 60)}分`, '');
+  modules.forEach((m) => {
+    const rs = recs.filter((r) => r.moduleId === m.id); if (!rs.length) return;
+    const s = recStats(rs);
+    L.push(`${m.icon} ${m.name}：${rs.length}回・${s.total}問・正答率${s.pct}%　◎ ${clearedIn(progressMap, m.id)}/${partsOf(m.id).length}シート`);
+  });
+  L.push('', '最近の結果：');
+  recs.slice(-10).reverse().forEach((r) => {
+    const d = new Date(r.date);
+    L.push(`・${d.getMonth() + 1}/${d.getDate()} ${recLabel(r)}　${r.correct}/${r.total}問${r.time != null ? '　' + fmtTime(r.time) : ''}`);
+  });
+  return L.join('\n');
+}
+async function sendReportNow() {
+  const s = saveReportSettings();
+  if (!okMail(s.email)) { setReportMsg('メールアドレスの形式を確認してください', false); return; }
+  if (!sb) { openMailApp(); return; }
+  if (!getNickname()) { setReportMsg('先に あだなを入れてください', false); return; }
+  $('report-send-btn').disabled = true; setReportMsg('送信しています…', true);
+  const r = await invokeReport(s.email);
+  $('report-send-btn').disabled = false;
+  setReportMsg(r.ok ? '送信しました（届くまで数分かかることがあります）' : r.msg, r.ok);
+  renderLastSent();
+}
+async function invokeReport(email) {
+  try {
+    const { data, error } = await sb.functions.invoke(APP.reportFunction, { body: { app: APP.id, user_id: getNickname(), email } });
+    if (error) { let code = ''; try { code = (await error.context.json()).error || ''; } catch (e) {} throw Object.assign(new Error(code || error.message), { code }); }
+    if (data && data.status === 'sent') { saveReportSettings({ lastSent: new Date().toISOString() }); return { ok: true }; }
+    return { ok: false, msg: '送信できませんでした：' + String((data && data.error) || '').slice(0, 120) };
+  } catch (e) {
+    console.warn('report failed', e);
+    return { ok: false, msg: e.code === 'rate_limited' ? '今日はもう送信できません（1日5回まで）' : '送信できませんでした。通信を確かめて、もう一度ためしてください' };
+  }
+}
+// 自動送信。trigger: 'run'=連続モード終了 / 'one'=一問一答終了 / 'open'=起動時
+function reportDue(s, trigger) {
+  if (s.freq === 'each') return trigger === 'run';
+  const days = FREQ_DAYS[s.freq]; if (!days) return false;
+  if (!s.lastSent) return true;
+  const last = new Date(s.lastSent), now = new Date();
+  if (days === 1) return last.toDateString() !== now.toDateString();          // 1日1回は日付が変わったら
+  return now - last >= days * 86400000 - 3600000;                             // 1時間の余裕をもたせる
+}
+let reportSending = false;
+async function autoReport(trigger) {
+  const s = reportSettings();
+  if (reportSending || !okMail(s.email) || !sb || !getNickname() || !reportDue(s, trigger)) return;
+  reportSending = true;
+  const note = trigger === 'open' ? null : $('mail-note');
+  if (note) note.textContent = '📬 進捗メールを送信中…';
+  const r = await invokeReport(s.email);
+  reportSending = false;
+  if (note) note.textContent = r.ok ? '📬 進捗メールを送りました' : '📬 ' + r.msg;
+}
+async function openMailApp() {
+  const s = saveReportSettings();
+  const body = buildReportText(await loadRecords());
+  const subject = `【${APP.name}】${getNickname() || ''}さんの進捗`;
+  location.href = `mailto:${encodeURIComponent(s.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+// =====================================================
+//  起動
+// =====================================================
+document.title = APP.name;
+document.documentElement.style.setProperty('--primary', APP.color);
+document.documentElement.style.setProperty('--primary-dark', APP.colorDark);
+document.querySelector('meta[name="theme-color"]').content = APP.color;
+$('app-title').textContent = `${APP.emoji} ${APP.name}`;
+$('app-tagline').textContent = APP.tagline;
+$('version-badge').textContent = `${APP.version} · ${CHANGELOG[0].date}`;
+if (!SYNC_ENABLED) $('nickname-note').textContent = '記録に使います（いまはこの端末だけに保存されます）';
+renderTop(); updateNicknameBar(); loadMyProgress();
+if (!getNickname()) showNicknameModal(false);
+setTimeout(() => autoReport('open'), 3000);          // 前回から間隔があいていたら進捗メールを送る
+
+// =====================================================
+//  Service Worker
+//  ・登録URLに ?v=APP.version → sw.js を書き換えなくてもバージョンUPで更新される
+//  ・新SWが有効になったらリロードは1回だけ（初回インストール時と、iOSのリロードループを避ける）
+//  ・アプリに戻ったときに更新確認（iOSのPWAは何日も開きっぱなしになるため）
+// =====================================================
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false, swReg = null;
+  const reloadForSW = () => { if (reloaded || !hadController || run) return; reloaded = true; location.reload(); };
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js?v=' + encodeURIComponent(APP.version)).then((r) => { swReg = r; }).catch(console.warn);
+  });
+  navigator.serviceWorker.addEventListener('message', (e) => { if (e.data?.type === 'SW_UPDATED') reloadForSW(); });
+  navigator.serviceWorker.addEventListener('controllerchange', reloadForSW);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && swReg) swReg.update().catch(() => {}); });
+}
+</script>
+</body>
+</html>
