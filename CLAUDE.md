@@ -65,7 +65,9 @@
 
 - `drill_records.theme` = `keisan:<種目>:lvNN:<シート>`。シートは `s1`（X-1）/ `s1-2`（分割したときの2つ目）/ `q`（一問一答）。
   `time_sec` = かかった秒（計算道場で追加した列。無いDBでも保存できるようフォールバックあり）。
-- `drill_progress.item_key` = `<種目>:lvNN:<シート>`、`count` = そのシートの最高判定（0〜3）。`APP.clearCount`=3（◎でクリア）。
+- `drill_progress.item_key` = `<種目>:lvNN:<シート>`、`count` = そのシートの最高判定（0〜3）。
+  **進み具合はポイント制**（2026-10-11〜）：✓=1・○=2・◎=3、`pct = ポイント ÷ (シート数×3)`（`progressOf`）。◎だけでなく✓・○でも進む。`APP.clearCount`=3 は満点の意味。
+- 履歴：きろく画面に「毎日の問題数」カレンダー（さいきん5週間、色の濃さ＝問題数）、トップに 今日／この7日／つづけた日数（`dailyCounts` / `renderCalendar` / `renderTodayBar`）。
 - テーブルが無い・通信できないときは localStorage に保存して動く。
 - DB作成は `supabase/schema.sql` を **SQL Editor で実行**（drill系テーブル＋`time_sec`列＋`drill_report_logs`）。
 

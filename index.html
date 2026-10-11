@@ -61,6 +61,9 @@
     .cat-desc { font-size: .85rem; color: var(--muted); font-weight: 600; }
     .cat-prog { font-size: .8rem; color: var(--primary-dark); font-weight: 700; margin-top: 4px; }
     .cat-arrow { font-size: 1.2rem; color: var(--muted); }
+    .cat-info .tile-prog-track { margin-top: 6px; height: 6px; background: #e6ebf0; border-radius: 10px; overflow: hidden; }
+    .tile-prog-track { height: 6px; background: #e6ebf0; border-radius: 10px; overflow: hidden; }
+    .tile-prog-fill { height: 100%; background: var(--success); border-radius: 10px; transition: width .4s; }
     .top-actions { padding: 8px 16px; display: flex; flex-direction: column; gap: 10px; }
     .home-action-btn { width: 100%; padding: 16px; font-size: 1.05rem; font-weight: 800; border: none; border-radius: var(--radius); cursor: pointer; font-family: inherit; background: var(--primary); color: #fff; }
     .home-action-btn.sub { background: var(--card); color: var(--primary-dark); border: 2px solid var(--primary); }
@@ -207,6 +210,26 @@
     .hist-table th { text-align: left; color: var(--muted); font-weight: 700; padding: 6px 4px; border-bottom: 2px solid #eef1f4; white-space: nowrap; }
     .hist-table td { padding: 8px 4px; border-bottom: 1px solid #eef1f4; font-variant-numeric: tabular-nums; }
     .hist-high { color: var(--success); font-weight: 800; } .hist-mid { color: #d68910; font-weight: 800; } .hist-low { color: var(--error); font-weight: 800; }
+    /* 毎日の問題数カレンダー */
+    .today-bar { margin-top: 12px; display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; background: rgba(255,255,255,.18); border-radius: 12px; padding: 6px 14px; font-size: .85rem; font-weight: 800; cursor: pointer; }
+    .today-bar:empty { display: none; }
+    .today-bar b { font-size: 1.05rem; }
+    .cal-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; text-align: center; }
+    .cal-sum div { background: #f8fafc; border-radius: 10px; padding: 8px 4px; font-size: .72rem; color: var(--muted); font-weight: 700; }
+    .cal-sum b { display: block; font-size: 1.2rem; color: var(--primary-dark); font-weight: 900; }
+    .cal-head, .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-head span { text-align: center; font-size: .7rem; color: var(--muted); font-weight: 800; padding-bottom: 2px; }
+    .cal-head span:first-child { color: var(--error); } .cal-head span:last-child { color: var(--primary); }
+    .cal-day { aspect-ratio: 1 / 1; border-radius: 8px; background: #eef1f4; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .cal-day .d { font-size: .62rem; color: var(--muted); font-weight: 700; }
+    .cal-day .n { font-size: .85rem; font-weight: 900; }
+    .cal-day.c1 { background: #d6eaf8; } .cal-day.c2 { background: #85c1e9; } .cal-day.c3 { background: #3c8dcc; color: #fff; } .cal-day.c4 { background: #1f5089; color: #fff; }
+    .cal-day.c3 .d, .cal-day.c4 .d { color: rgba(255,255,255,.85); }
+    .cal-day.today { box-shadow: 0 0 0 2px var(--accent); }
+    .cal-day.future { background: transparent; }
+    .cal-legend { margin-top: 8px; font-size: .72rem; color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+    .cal-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .cal-legend i.c1 { background: #d6eaf8; } .cal-legend i.c2 { background: #85c1e9; } .cal-legend i.c3 { background: #3c8dcc; } .cal-legend i.c4 { background: #1f5089; }
     .reset-btn { background: none; border: 2px solid var(--line); color: var(--muted); border-radius: 12px; padding: 12px; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: inherit; }
 
     /* ── 進捗メール ── */
@@ -245,6 +268,7 @@
       <span>あだな：<span class="nickname-name" id="nickname-display">（未設定）</span></span>
       <button class="nickname-change-btn" onclick="showNicknameModal(true)">変える</button>
     </div>
+    <div class="today-bar" id="today-bar" onclick="showGraph()"></div>
     <div><button class="version-badge" id="version-badge" onclick="showVersionHistory()"></button></div>
   </div>
   <div class="categories-list" id="categories-list"></div>
@@ -331,7 +355,14 @@
     <div class="stats-row">
       <div class="stat-box"><div class="stat-val" id="g-total">0</div><div class="stat-lbl">合計問題数</div></div>
       <div class="stat-box"><div class="stat-val" id="g-accuracy">-%</div><div class="stat-lbl">正答率</div></div>
-      <div class="stat-box"><div class="stat-val" id="g-great">0</div><div class="stat-lbl">◎のシート</div></div>
+      <div class="stat-box"><div class="stat-val" id="g-great">0</div><div class="stat-lbl">進み具合</div></div>
+    </div>
+    <div class="graph-card">
+      <div class="graph-card-title">📅 毎日の問題数（さいきん5週間）</div>
+      <div class="cal-sum" id="g-cal-sum"></div>
+      <div class="cal-head"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+      <div class="cal" id="g-cal"></div>
+      <div class="cal-legend">少ない <i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i> 多い　（数字＝その日に解いた問題数）</div>
     </div>
     <div class="graph-card">
       <div class="graph-card-title" id="g-progress-title"></div>
@@ -421,8 +452,8 @@ const APP = {
   name: '計算道場',
   emoji: '🧮',
   tagline: 'はやく・正確に。タイムをちぢめよう。',
-  version: 'v0.4.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
-  buildTime: '202610101331',      // yyyymmddhhmm ★デプロイのたびに更新
+  version: 'v0.5.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
+  buildTime: '202610110922',      // yyyymmddhhmm ★デプロイのたびに更新
   color: '#2d6fb0',               // メインカラー
   colorDark: '#1f5089',
   clearCount: 3,                  // シートの達成度 1=ぜんもん正解 2=○タイム 3=◎タイム。3で「クリア」
@@ -436,6 +467,7 @@ const APP = {
 
 // 更新履歴（新しい版を先頭に追加）
 const CHANGELOG = [
+  { version: 'v0.5.0', date: '2026-10-11', items: ['進み具合を ✓=1・○=2・◎=3 のポイントで数えるように（◎でなくても進む）', 'きろくに「毎日の問題数」カレンダー、トップに今日・この7日・つづけた日数を表示'] },
   { version: 'v0.4.0', date: '2026-10-10', items: ['「最小公倍数」（4レベル）と「分数のたし算・ひき算」（8レベル）を追加', '分数は たて書きで表示。答えは 整数・分子・分母 の枠に入れる（約分・帯分数もチェック）'] },
   { version: 'v0.3.0', date: '2026-10-10', items: ['どのレベルもシートを4枚（X-1〜X-4）にそろえました（全144シート・4104問）', 'シートの番号を「4-1」の形に'] },
   { version: 'v0.2.1', date: '2026-10-10', items: ['iPhone向け：とき中は画面が暗くならないように', '引っぱって更新・長押しの選択を出さないように', 'iPhone SE など小さい画面でもテンキーが収まるように'] },
@@ -615,7 +647,7 @@ function confirmNickname() {
   localStorage.setItem(K('nickname'), name);
   progressMap = {};                              // プレイヤーが変わるので読み直す
   $('nickname-overlay').classList.add('hidden');
-  updateNicknameBar(); renderTop(); loadMyProgress();
+  updateNicknameBar(); renderTop(); loadMyProgress(); renderTodayBar();
 }
 $('nickname-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmNickname(); });
 
@@ -639,14 +671,16 @@ function closeVersionModal(e) {
 //  進捗（シートごとの最高達成度。1=ぜんもん正解 2=○ 3=◎）
 //  正は Supabase（drill_progress）。未設定時は localStorage
 // =====================================================
-function clearedIn(map, op, min = APP.clearCount) {
-  const keys = new Set(partsOf(op).map((p) => p.key));
-  return Object.keys(map).filter((k) => keys.has(k) && map[k] >= min).length;
+//  進み具合はポイントで数える：✓=1 ○=2 ◎=3（◎だけでなく ✓・○ でも進む）。pct = ポイント ÷ (シート数×3)
+function progressOf(keys, map) {
+  map = map || progressMap;
+  const rs = keys.map((k) => Math.min(APP.clearCount, map[k] || 0));
+  const points = rs.reduce((s, r) => s + r, 0), max = keys.length * APP.clearCount;
+  return { total: keys.length, points, max, pct: max ? Math.round(points / max * 100) : 0,
+    done: rs.filter((r) => r >= 1).length, good: rs.filter((r) => r >= 2).length, great: rs.filter((r) => r >= 3).length };
 }
-function moduleProgress(op, map) {
-  const total = partsOf(op).length, cleared = clearedIn(map || progressMap, op);
-  return { cleared, total, pct: total ? Math.round(cleared / total * 100) : 0 };
-}
+function moduleProgress(op, map) { return progressOf(partsOf(op).map((p) => p.key), map); }
+const progText = (p) => `✓以上 ${p.done}/${p.total}（○${p.good - p.great}・◎${p.great}）`;
 function bumpBest(key, rank) {
   const prev = progressMap[key] || 0;
   if (rank <= prev) return { prev, next: prev, improved: false };
@@ -683,7 +717,7 @@ async function loadAllProgress() {
 async function renderPlayersProgress() {
   const scope = activeOp ? [activeOp] : modules.map((m) => m.id);
   const total = scope.reduce((s, id) => s + partsOf(id).length, 0);
-  $('g-progress-title').textContent = '🏅 みんなの進捗（◎タイムでクリア）';
+  $('g-progress-title').textContent = '🏅 みんなの進み具合（✓=1 ○=2 ◎=3 ポイント）';
   $('g-progress-note').textContent = `${activeOp ? moduleById(activeOp).name + ' の ' : 'ぜんぶで '}${total}シート`;
   const list = $('g-progress-list');
   list.innerHTML = '<div class="pp-note">よみこみ中…</div>';
@@ -697,16 +731,16 @@ async function renderPlayersProgress() {
   });
   const players = [...maps.entries()].map(([name, map]) => {
     const per = scope.map((id) => ({ m: moduleById(id), p: moduleProgress(id, map) })).filter((x) => x.p.total);
-    const cleared = per.reduce((s, x) => s + x.p.cleared, 0);
-    return { name, cleared, pct: total ? Math.round(cleared / total * 100) : 0, per, isMe: name === meKey };
-  }).sort((a, b) => b.cleared - a.cleared);
+    const points = per.reduce((s, x) => s + x.p.points, 0), done = per.reduce((s, x) => s + x.p.done, 0);
+    return { name, points, done, pct: total ? Math.round(points / (total * APP.clearCount) * 100) : 0, per, isMe: name === meKey };
+  }).sort((a, b) => b.points - a.points);
   const medals = ['🥇', '🥈', '🥉'];
   list.innerHTML = players.map((p, i) => `
     <div class="pp-row${p.isMe ? ' me' : ''}">
       <div class="pp-head"><span>${medals[i] || '　'}</span><span class="pp-name">${esc(p.name)}</span>
-        ${p.isMe ? '<span class="pp-me-tag">あなた</span>' : ''}<span class="pp-val">${p.pct}%（${p.cleared}/${total}）</span></div>
+        ${p.isMe ? '<span class="pp-me-tag">あなた</span>' : ''}<span class="pp-val">${p.pct}%（✓以上 ${p.done}/${total}）</span></div>
       <div class="pp-track"><div class="pp-fill" style="width:${p.pct}%"></div></div>
-      <div class="pp-mods">${p.per.map((x) => `<span class="pp-mod${x.p.cleared >= x.p.total ? ' done' : ''}">${x.m.icon} ${x.p.cleared}/${x.p.total}</span>`).join('')}</div>
+      <div class="pp-mods">${p.per.map((x) => `<span class="pp-mod${x.p.great >= x.p.total ? ' done' : ''}">${x.m.icon} ${x.p.pct}%</span>`).join('')}</div>
     </div>`).join('') + (sb ? '' : '<div class="pp-note">※ Supabase未設定のため、この端末の記録だけ表示しています</div>');
 }
 
@@ -717,7 +751,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
   window.scrollTo(0, 0);
 }
-function goTop() { stopTimer(); run = null; destroyCharts(); activeOp = null; renderTop(); showScreen('top-screen'); }
+function goTop() { stopTimer(); run = null; destroyCharts(); activeOp = null; renderTop(); renderTodayBar(); showScreen('top-screen'); }
 function goBackFromGraph() { destroyCharts(); if (activeOp) backToOp(); else goTop(); }
 function showOp(id) { activeOp = id; renderOp(); showScreen('op-screen'); }
 function backToOp() { stopTimer(); run = null; if (activeOp) { renderOp(); showScreen('op-screen'); } else goTop(); }
@@ -725,13 +759,13 @@ function backToOp() { stopTimer(); run = null; if (activeOp) { renderOp(); showS
 function renderTop() {
   $('categories-list').innerHTML = '';
   modules.forEach((m) => {
-    const p = moduleProgress(m.id), lvs = levelsOf(m.id), ok = clearedIn(progressMap, m.id, 2);
+    const p = moduleProgress(m.id), lvs = levelsOf(m.id);
     const card = document.createElement('div');
     card.className = 'category-card' + (p.total ? '' : ' empty'); card.style.borderLeftColor = m.color;
     card.innerHTML = `<div class="cat-icon">${m.icon}</div>
       <div class="cat-info"><div class="cat-name">${esc(m.name)}</div>
       <div class="cat-desc">${lvs.length ? `レベル ${lvs[0]}${lvs.length > 1 ? '〜' + lvs[lvs.length - 1] : ''}・${p.total}シート` : 'もんだい じゅんび中'}</div>
-      ${p.total ? `<div class="cat-prog">◎ ${p.cleared}/${p.total}　○以上 ${ok}/${p.total}</div>` : ''}</div><div class="cat-arrow">›</div>`;
+      ${p.total ? `<div class="cat-prog">進み ${p.pct}%　${progText(p)}</div><div class="tile-prog-track"><div class="tile-prog-fill" style="width:${p.pct}%"></div></div>` : ''}</div><div class="cat-arrow">›</div>`;
     card.onclick = () => showOp(m.id);
     $('categories-list').appendChild(card);
   });
@@ -756,10 +790,11 @@ function renderOp() {
   if (!lvs.length) { list.innerHTML = '<div class="empty-note">この種目の問題は まだありません。<br>problems.js に追加すると ここに出ます。</div>'; return; }
   list.innerHTML = lvs.map((lv) => {
     const ps = partsOf(activeOp, lv);
-    const done = ps.filter((p) => (progressMap[p.key] || 0) >= APP.clearCount).length;
+    const lp = progressOf(ps.map((p) => p.key));
     return `<div class="level-card">
       <div class="level-head"><span class="level-name">レベル ${lv}${ps.some((p) => p.dummy) ? '<span class="dummy-tag">サンプル</span>' : ''}</span>
-        <span class="level-prog">◎ ${done}/${ps.length}</span></div>
+        <span class="level-prog">進み ${lp.pct}%</span></div>
+      <div class="tile-prog-track" style="margin:-6px 0 10px"><div class="tile-prog-fill" style="width:${lp.pct}%"></div></div>
       <div class="sheet-list">${ps.map((p) => {
         const r = progressMap[p.key] || 0;
         return `<button class="sheet-btn r${r}" onclick="startRun('${p.key}')"><span class="s-label">${esc(p.label)} ${RANK_MARK[r]}</span>
@@ -1058,6 +1093,40 @@ function recStats(recs) {
 }
 
 // =====================================================
+//  毎日の問題数（カレンダー・トップの「今日」）
+// =====================================================
+const dayKey = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+function dailyCounts(recs) {                       // 日付 → その日に解いた問題数
+  const m = new Map();
+  recs.forEach((r) => { const k = dayKey(new Date(r.date)); m.set(k, (m.get(k) || 0) + r.total); });
+  return m;
+}
+function daySummary(daily) {
+  const today = new Date(), back = (n) => { const d = new Date(today); d.setDate(d.getDate() - n); return dayKey(d); };
+  let week = 0; for (let i = 0; i < 7; i++) week += daily.get(back(i)) || 0;
+  let streak = 0; for (let i = daily.get(back(0)) ? 0 : 1; daily.get(back(i)); i++) streak++;   // 今日まだでも昨日までの連続は数える
+  return { today: daily.get(back(0)) || 0, week, streak };
+}
+const calLevel = (n) => (n <= 0 ? '' : n < 20 ? 'c1' : n < 40 ? 'c2' : n < 80 ? 'c3' : 'c4');
+function renderCalendar(recs) {
+  const daily = dailyCounts(recs), sum = daySummary(daily), today = new Date();
+  $('g-cal-sum').innerHTML = `<div><b>${sum.today}問</b>今日</div><div><b>${sum.week}問</b>この7日</div><div><b>${sum.streak}日</b>つづけた日数</div>`;
+  const start = new Date(today); start.setDate(start.getDate() - today.getDay() - 28);      // 5週間前の日曜から
+  let html = '';
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const k = dayKey(d), n = daily.get(k) || 0, future = d > today && k !== dayKey(today);
+    html += `<div class="cal-day ${calLevel(n)}${k === dayKey(today) ? ' today' : ''}${future ? ' future' : ''}" title="${d.getMonth() + 1}/${d.getDate()} ${n}問">
+      <span class="d">${d.getDate() === 1 || i === 0 ? (d.getMonth() + 1) + '/' : ''}${d.getDate()}</span><span class="n">${future ? '' : n || ''}</span></div>`;
+  }
+  $('g-cal').innerHTML = html;
+}
+async function renderTodayBar() {
+  const sum = daySummary(dailyCounts(await loadRecords()));
+  $('today-bar').innerHTML = `<span>今日 <b>${sum.today}</b>問</span><span>この7日 <b>${sum.week}</b>問</span>${sum.streak ? `<span>🔥 <b>${sum.streak}</b>日つづけて</span>` : ''}`;
+}
+
+// =====================================================
 //  きろく（グラフ）
 // =====================================================
 let accChart = null, cntChart = null, lineChart = null;
@@ -1075,10 +1144,11 @@ async function renderGraph() {
   ['g-total', 'g-accuracy', 'g-great'].forEach((id) => { $(id).textContent = '…'; });
   const scopeIds = activeOp ? [activeOp] : modules.map((m) => m.id);
   const recs = (await loadRecords()).filter((r) => scopeIds.includes(r.moduleId));
+  renderCalendar(recs);
   const { total, pct } = recStats(recs);
   $('g-total').textContent = total + '問';
   $('g-accuracy').textContent = pct !== null ? pct + '%' : '-%';
-  $('g-great').textContent = scopeIds.reduce((s, id) => s + clearedIn(progressMap, id), 0);
+  $('g-great').textContent = progressOf(scopeIds.flatMap((id) => partsOf(id).map((p) => p.key))).pct + '%';
 
   $('g-dots').innerHTML = recs.length
     ? recs.slice(-20).reverse().map((r) => `<span>${r.score === 100 ? '🎉' : r.score >= 70 ? '⭕' : '❌'}</span>`).join('')
@@ -1198,7 +1268,7 @@ function buildReportText(allRecs) {
   modules.forEach((m) => {
     const rs = recs.filter((r) => r.moduleId === m.id); if (!rs.length) return;
     const s = recStats(rs);
-    L.push(`${m.icon} ${m.name}：${rs.length}回・${s.total}問・正答率${s.pct}%　◎ ${clearedIn(progressMap, m.id)}/${partsOf(m.id).length}シート`);
+    L.push(`${m.icon} ${m.name}：${rs.length}回・${s.total}問・正答率${s.pct}%　進み${moduleProgress(m.id).pct}%（${progText(moduleProgress(m.id))}）`);
   });
   L.push('', '最近の結果：');
   recs.slice(-10).reverse().forEach((r) => {
@@ -1267,7 +1337,7 @@ $('app-title').textContent = `${APP.emoji} ${APP.name}`;
 $('app-tagline').textContent = APP.tagline;
 $('version-badge').textContent = `${APP.version} · ${CHANGELOG[0].date}`;
 if (!SYNC_ENABLED) $('nickname-note').textContent = '記録に使います（いまはこの端末だけに保存されます）';
-renderTop(); updateNicknameBar(); loadMyProgress();
+renderTop(); updateNicknameBar(); loadMyProgress(); renderTodayBar();
 if (!getNickname()) showNicknameModal(false);
 setTimeout(() => autoReport('open'), 3000);          // 前回から間隔があいていたら進捗メールを送る
 

@@ -93,8 +93,8 @@ function summarize(name: string, recs: Rec[], prog: { item_key: string; count: n
   const byOp = Object.keys(OPS).map((op) => {
     const s = sum(rows.filter((r) => r.op === op));
     const p = prog.filter((x) => x.item_key.startsWith(op + ":"));
-    return { op, ...OPS[op], ...s, great: p.filter((x) => x.count >= 3).length, good: p.filter((x) => x.count === 2).length };
-  }).filter((x) => x.n || x.great || x.good);
+    return { op, ...OPS[op], ...s, great: p.filter((x) => x.count >= 3).length, good: p.filter((x) => x.count === 2).length, ok: p.filter((x) => x.count === 1).length };
+  }).filter((x) => x.n || x.great || x.good || x.ok);
   return {
     name, all: sum(rows), days: new Set(rows.map((r) => jstDate(r.played_at))).size,
     minutes: Math.round(rows.reduce((s, r) => s + (r.time_sec ?? 0), 0) / 60), byOp,
@@ -108,7 +108,7 @@ function renderText(v: View) {
   if (!v.all.n) L.push("この7日間の きろくは ありません。");
   else {
     L.push(`学習した日：${v.days}/7日`, `とりくんだ回数：${v.all.n}回（${v.all.total}問）`, `正答率：${v.all.pct}%`, `計算した時間：${v.minutes}分`, "");
-    v.byOp.forEach((o) => L.push(`${o.icon} ${o.name}：${o.n}回・${o.total}問${o.pct != null ? `・正答率${o.pct}%` : ""}　◎${o.great}シート ○${o.good}シート`));
+    v.byOp.forEach((o) => L.push(`${o.icon} ${o.name}：${o.n}回・${o.total}問${o.pct != null ? `・正答率${o.pct}%` : ""}　達成シート ◎${o.great}・○${o.good}・✓${o.ok}`));
     L.push("", "最近の結果：");
     v.recent.forEach((r) => L.push(`・${r.date} ${r.label}　${r.correct}/${r.total}問${r.time ? "　" + r.time : ""}`));
   }
@@ -124,7 +124,7 @@ function renderHtml(v: View) {
 <table role="presentation" width="100%" cellspacing="8"><tr>${kpi(`${v.days}<small style="font-size:13px"> / 7日</small>`, "学習した日")}${kpi(`${v.all.total}<small style="font-size:13px"> 問</small>`, `とりくんだ問題（${v.all.n}回）`)}</tr>
 <tr>${kpi(`${v.all.pct ?? "–"}<small style="font-size:13px">%</small>`, "正答率")}${kpi(`${v.minutes}<small style="font-size:13px"> 分</small>`, "計算した時間")}</tr></table>
 <div style="font-weight:800;font-size:13px;margin:14px 0 6px">種目べつ</div>
-<table role="presentation" width="100%" style="font-size:14px;border-collapse:collapse">${v.byOp.map((o) => `<tr><td style="padding:6px 0;border-bottom:1px solid #eef1f4">${o.icon} ${esc(o.name)}</td><td style="text-align:right;border-bottom:1px solid #eef1f4">${o.n}回・${o.total}問${o.pct != null ? `・<b>${o.pct}%</b>` : ""}</td><td style="text-align:right;border-bottom:1px solid #eef1f4;color:#27ae60;font-weight:700">◎${o.great} ○${o.good}</td></tr>`).join("")}</table>
+<table role="presentation" width="100%" style="font-size:14px;border-collapse:collapse">${v.byOp.map((o) => `<tr><td style="padding:6px 0;border-bottom:1px solid #eef1f4">${o.icon} ${esc(o.name)}</td><td style="text-align:right;border-bottom:1px solid #eef1f4">${o.n}回・${o.total}問${o.pct != null ? `・<b>${o.pct}%</b>` : ""}</td><td style="text-align:right;border-bottom:1px solid #eef1f4;color:#27ae60;font-weight:700">◎${o.great} ○${o.good} ✓${o.ok}</td></tr>`).join("")}</table>
 <div style="font-weight:800;font-size:13px;margin:14px 0 6px">最近の結果</div>
 <table role="presentation" width="100%" style="font-size:13px;border-collapse:collapse">${v.recent.map((r) => `<tr><td style="padding:5px 0;color:#475569">${esc(r.date)}</td><td>${esc(r.label)}</td><td style="text-align:right">${r.correct}/${r.total}</td><td style="text-align:right;color:#1f5089;font-weight:700">${esc(r.time)}</td></tr>`).join("")}</table>`;
   return `<!doctype html><html><body style="margin:0;background:#f0f4f8;font-family:-apple-system,'Hiragino Sans',sans-serif;color:#2c3e50">
