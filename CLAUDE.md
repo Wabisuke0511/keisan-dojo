@@ -68,7 +68,11 @@
 - `drill_progress.item_key` = `<種目>:lvNN:<シート>`、`count` = そのシートの最高判定（0〜3）。
   **進み具合はポイント制**（2026-10-11〜）：✓=1・○=2・◎=3、`pct = ポイント ÷ (シート数×3)`（`progressOf`）。◎だけでなく✓・○でも進む。`APP.clearCount`=3 は満点の意味。
 - 履歴：きろく画面に「毎日の問題数」カレンダー（さいきん5週間、色の濃さ＝問題数）、トップに 今日／この7日／つづけた日数（`dailyCounts` / `renderCalendar` / `renderTodayBar`）。
-- テーブルが無い・通信できないときは localStorage に保存して動く。
+- **端末どうしの同期**（2026-10-11 修正）：記録の持ち主は あだな（端末ごとに入力）。あだなが違うと記録が分かれる → あだな入力では これまでの あだなをボタンで選べる（新しい名前には警告）。
+  アプリに戻ったとき（visibilitychange）・トップに戻ったときに `refreshFromServer`（未送信を送る→進み具合と記録を読み直す）。解いている途中は読み直さない。
+  進み具合は `saveProgressMax` でサーバーの値を読んでから大きいほうを書く（もう一方の端末の◎を○で上書きしない）。
+  送れなかった記録・進み具合は localStorage `keisan:pending` にためて次に送る。トップに「さいごに解いた日時」と未送信の件数を出す。
+- Supabase未設定のときは localStorage（`keisan:records` / `keisan:progress`）だけで動く。
 - DB作成は `supabase/schema.sql` を **SQL Editor で実行**（drill系テーブル＋`time_sec`列＋`drill_report_logs`）。
 
 ## 進捗メール（eitan-radar の週間レポートを手本に簡略化）

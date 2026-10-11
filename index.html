@@ -40,6 +40,10 @@
     .nickname-bar { margin-top: 14px; font-size: .85rem; opacity: .95; }
     .nickname-name { font-weight: 800; }
     .nickname-change-btn { margin-left: 8px; background: rgba(255,255,255,.2); color: #fff; border: none; border-radius: 8px; padding: 4px 10px; font-size: .8rem; cursor: pointer; }
+    .last-played { display: inline-block; margin: 10px 0 0 6px; background: rgba(255,255,255,.18); border-radius: 8px; padding: 3px 10px; font-size: .75rem; font-weight: 700; }
+    .last-played:empty { display: none; }
+    .sync-info { margin-top: 6px; font-size: .75rem; font-weight: 800; color: #ffe08a; }
+    .sync-info:empty { display: none; }
     .version-badge { margin-top: 10px; background: rgba(255,255,255,.18); color: #fff; border: none; border-radius: 8px; padding: 3px 10px; font-size: .75rem; cursor: pointer; }
     .sub-header { color: #fff; background: var(--primary); padding: calc(env(safe-area-inset-top) + 20px) 20px 20px; display: flex; align-items: center; gap: 12px; }
     .sub-header h2 { font-size: 1.25rem; font-weight: 800; }
@@ -248,6 +252,11 @@
     .modal-box { background: #fff; border-radius: 20px; padding: 28px 22px 22px; width: 100%; max-width: 380px; max-height: 85vh; overflow-y: auto; }
     .modal-box h3 { font-size: 1.2rem; margin-bottom: 8px; }
     .modal-box p { font-size: .9rem; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .nick-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .nick-label { width: 100%; font-size: .8rem; font-weight: 800; color: var(--muted); }
+    .nick-btn { padding: 10px 16px; border: 2px solid var(--primary); border-radius: 20px; background: var(--primary-soft); color: var(--primary-dark); font-size: 1rem; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .nick-btn.on { background: var(--primary); color: #fff; }
+    .nick-warn { min-height: 1.2em; margin: -6px 0 10px; font-size: .8rem; font-weight: 700; color: var(--error); }
     .nickname-input { width: 100%; font-size: 1.1rem; padding: 12px; border: 2px solid var(--line); border-radius: 12px; margin-bottom: 14px; text-align: center; font-family: inherit; }
     .nickname-ok-btn, .version-close-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-size: 1rem; font-weight: 800; cursor: pointer; font-family: inherit; }
     .version-entry { margin-bottom: 18px; }
@@ -269,7 +278,8 @@
       <button class="nickname-change-btn" onclick="showNicknameModal(true)">変える</button>
     </div>
     <div class="today-bar" id="today-bar" onclick="showGraph()"></div>
-    <div><button class="version-badge" id="version-badge" onclick="showVersionHistory()"></button></div>
+    <div><button class="version-badge" id="version-badge" onclick="showVersionHistory()"></button><span class="last-played" id="last-played"></span></div>
+    <div class="sync-info" id="sync-info"></div>
   </div>
   <div class="categories-list" id="categories-list"></div>
   <div class="top-actions">
@@ -431,7 +441,9 @@
   <div class="modal-box">
     <h3>👤 あだなを入れてね</h3>
     <p id="nickname-note">記録をどの端末からでも見られるように使います</p>
+    <div class="nick-list" id="nick-list"></div>
     <input class="nickname-input" type="text" id="nickname-input" maxlength="20" placeholder="例：しゅんすけ" />
+    <div class="nick-warn" id="nick-warn"></div>
     <button class="nickname-ok-btn" onclick="confirmNickname()">OK</button>
   </div>
 </div>
@@ -452,8 +464,8 @@ const APP = {
   name: '計算道場',
   emoji: '🧮',
   tagline: 'はやく・正確に。タイムをちぢめよう。',
-  version: 'v0.5.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
-  buildTime: '202610110922',      // yyyymmddhhmm ★デプロイのたびに更新
+  version: 'v0.6.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
+  buildTime: '202610112011',      // yyyymmddhhmm ★デプロイのたびに更新
   color: '#2d6fb0',               // メインカラー
   colorDark: '#1f5089',
   clearCount: 3,                  // シートの達成度 1=ぜんもん正解 2=○タイム 3=◎タイム。3で「クリア」
@@ -467,6 +479,7 @@ const APP = {
 
 // 更新履歴（新しい版を先頭に追加）
 const CHANGELOG = [
+  { version: 'v0.6.0', date: '2026-10-11', items: ['端末どうしの記録のズレを修正（アプリにもどったとき読み直す・◎を○で上書きしない・送れなかった記録はあとで送る）', 'あだなは これまでの あだなから えらべるように', 'バージョンの横に「さいごに解いた日時」を表示'] },
   { version: 'v0.5.0', date: '2026-10-11', items: ['進み具合を ✓=1・○=2・◎=3 のポイントで数えるように（◎でなくても進む）', 'きろくに「毎日の問題数」カレンダー、トップに今日・この7日・つづけた日数を表示'] },
   { version: 'v0.4.0', date: '2026-10-10', items: ['「最小公倍数」（4レベル）と「分数のたし算・ひき算」（8レベル）を追加', '分数は たて書きで表示。答えは 整数・分子・分母 の枠に入れる（約分・帯分数もチェック）'] },
   { version: 'v0.3.0', date: '2026-10-10', items: ['どのレベルもシートを4枚（X-1〜X-4）にそろえました（全144シート・4104問）', 'シートの番号を「4-1」の形に'] },
@@ -636,18 +649,40 @@ let run = null;                                  // 出題中の状態（startRu
 // =====================================================
 function getNickname() { return localStorage.getItem(K('nickname')) || ''; }
 function updateNicknameBar() { $('nickname-display').textContent = getNickname() || '（未設定）'; }
-function showNicknameModal(isChange) {
-  $('nickname-input').value = isChange ? getNickname() : '';
-  $('nickname-overlay').classList.remove('hidden');
-  setTimeout(() => $('nickname-input').focus(), 50);
+// あだなが記録の持ち主。端末ごとに入れるので、ちがうあだなを入れると記録が分かれてしまう
+// → これまでに使われた あだなをボタンで出して、選べるようにする
+let knownNicks = [];
+async function loadKnownNicknames() {
+  if (!sb) return [];
+  try {
+    const [a, b] = await Promise.all([
+      sb.from('drill_records').select('user_id').like('theme', THEME_PREFIX + '%').limit(5000),
+      sb.from('drill_progress').select('user_id').eq('app', APP.id).limit(5000)]);
+    return [...new Set([...(a.data || []), ...(b.data || [])].map((r) => r.user_id))].sort();
+  } catch (e) { return []; }
 }
+function updateNickWarn() {
+  const v = $('nickname-input').value.trim();
+  $('nick-warn').textContent = v && knownNicks.length && !knownNicks.includes(v) ? `「${v}」は新しい あだなです。今までの記録とは べつになります` : '';
+}
+async function showNicknameModal(isChange) {
+  $('nickname-input').value = isChange ? getNickname() : '';
+  $('nick-list').innerHTML = ''; $('nick-warn').textContent = '';
+  $('nickname-overlay').classList.remove('hidden');
+  knownNicks = await loadKnownNicknames();
+  $('nick-list').innerHTML = knownNicks.length ? '<div class="nick-label">これまでの あだな（おして えらぶ）</div>' +
+    knownNicks.map((n) => `<button class="nick-btn${n === getNickname() ? ' on' : ''}" data-n="${esc(n)}">${esc(n)}</button>`).join('') : '';
+  $('nick-list').querySelectorAll('.nick-btn').forEach((b) => b.onclick = () => { $('nickname-input').value = b.dataset.n; confirmNickname(); });
+  updateNickWarn();
+}
+$('nickname-input').addEventListener('input', updateNickWarn);
 function confirmNickname() {
   const name = $('nickname-input').value.trim();
   if (!name) { $('nickname-input').focus(); return; }
   localStorage.setItem(K('nickname'), name);
   progressMap = {};                              // プレイヤーが変わるので読み直す
   $('nickname-overlay').classList.add('hidden');
-  updateNicknameBar(); renderTop(); loadMyProgress(); renderTodayBar();
+  updateNicknameBar(); renderTop(); refreshFromServer();
 }
 $('nickname-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') confirmNickname(); });
 
@@ -687,15 +722,24 @@ function bumpBest(key, rank) {
   progressMap[key] = rank; pushProgress(key, rank);
   return { prev, next: rank, improved: true };
 }
+// もう一方の端末で先に良い記録（例：◎）を取っていることがあるので、サーバーの値を読んでから大きいほうを書く
+async function saveProgressMax(user, key, count) {
+  const cur = await sb.from('drill_progress').select('count').eq('user_id', user).eq('app', APP.id).eq('item_key', key).maybeSingle();
+  if (cur.error) throw cur.error;
+  const best = Math.max(count, cur.data ? cur.data.count : 0);
+  if (!cur.data || cur.data.count < best) {
+    const { error } = await sb.from('drill_progress').upsert(
+      { user_id: user, app: APP.id, item_key: key, count: best, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,app,item_key' });
+    if (error) throw error;
+  }
+  return best;
+}
 async function pushProgress(key, count) {
   if (!sb) { lsSet('progress', progressMap); return; }
   const user = getNickname(); if (!user) return;
-  try {
-    const { error } = await sb.from('drill_progress').upsert(
-      { user_id: user, app: APP.id, item_key: key, count, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,app,item_key' });
-    if (error) throw error;
-  } catch (e) { console.warn('progress save failed', e.message); lsSet('progress', progressMap); }
+  try { const best = await saveProgressMax(user, key, count); if (getNickname() === user) progressMap[key] = best; }
+  catch (e) { console.warn('progress save failed', e.message); addPending({ kind: 'progress', user_id: user, key, count }); }
 }
 async function loadMyProgress() {
   if (!sb) { progressMap = lsGet('progress', {}); renderTop(); return; }
@@ -703,7 +747,10 @@ async function loadMyProgress() {
   try {
     const { data, error } = await sb.from('drill_progress').select('item_key, count').eq('user_id', user).eq('app', APP.id);
     if (error || !data) { progressMap = lsGet('progress', {}); renderTop(); return; }
-    progressMap = {}; data.forEach((r) => { progressMap[r.item_key] = r.count; });   // Supabaseが正
+    const fresh = {}; data.forEach((r) => { fresh[r.item_key] = r.count; });   // Supabaseが正
+    // まだ送れていない進み具合は、こちらが大きければ残す
+    pendingList().filter((p) => p.kind === 'progress' && p.user_id === user).forEach((p) => { fresh[p.key] = Math.max(fresh[p.key] || 0, p.count); });
+    progressMap = fresh;
     renderTop(); if (activeOp && $('op-screen').classList.contains('active')) renderOp();
   } catch (e) { console.warn('progress load failed', e.message); }
 }
@@ -751,7 +798,7 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach((s) => s.classList.toggle('active', s.id === id));
   window.scrollTo(0, 0);
 }
-function goTop() { stopTimer(); run = null; destroyCharts(); activeOp = null; renderTop(); renderTodayBar(); showScreen('top-screen'); }
+function goTop() { stopTimer(); run = null; destroyCharts(); activeOp = null; renderTop(); showScreen('top-screen'); refreshFromServer(); }
 function goBackFromGraph() { destroyCharts(); if (activeOp) backToOp(); else goTop(); }
 function showOp(id) { activeOp = id; renderOp(); showScreen('op-screen'); }
 function backToOp() { stopTimer(); run = null; if (activeOp) { renderOp(); showScreen('op-screen'); } else goTop(); }
@@ -1064,14 +1111,53 @@ async function saveSessionRecord(op, level, tag, total, correct, sec) {
   if (!sb) { local(); return; }
   const user = getNickname(); if (!user) { local(); return; }
   const row = { user_id: user, score, theme: `${THEME_PREFIX}${op}:${level}:${tag}`, played_at, total_q: total, time_sec: Math.round(sec) };
+  if (!(await insertRecord(row))) addPending({ kind: 'record', row });   // 通信できないときは あとで送る
+  renderTodayBar();
+}
+async function insertRecord(row) {
   try {
     let { error } = await sb.from('drill_records').insert(row);
     if (error && /time_sec/.test(error.message)) {          // time_sec 列がまだ無いDB向け
-      delete row.time_sec; ({ error } = await sb.from('drill_records').insert(row));
+      const r2 = { ...row }; delete r2.time_sec; ({ error } = await sb.from('drill_records').insert(r2));
     }
     if (error) throw error;
-  } catch (e) { console.warn('record save failed', e.message); local(); }
+    return true;
+  } catch (e) { console.warn('record save failed', e.message); return false; }
 }
+// ---------- 未送信（Supabaseに送れなかった記録・進み具合）。アプリを開いたとき・戻ったときに送りなおす ----------
+function pendingList() { return lsGet('pending', []); }
+function addPending(item) { const l = pendingList(); l.push(item); lsSet('pending', l); renderSyncInfo(); }
+let flushing = false;
+async function flushPending() {
+  if (!sb || flushing) return;
+  flushing = true;
+  try {
+    // 前の版で 端末だけに保存された記録（records）も 未送信に移す
+    const legacy = lsGet('records', []), user = getNickname();
+    if (legacy.length && user) {
+      const l = pendingList();
+      legacy.forEach((r) => l.push({ kind: 'record', row: { user_id: user, score: r.score, theme: `${THEME_PREFIX}${r.moduleId}:${r.level}:${r.tag}`, played_at: r.date, total_q: r.total, time_sec: r.time == null ? null : Math.round(r.time) } }));
+      lsSet('pending', l); lsSet('records', []);
+    }
+    const left = [];
+    for (const p of pendingList()) {
+      let ok = false;
+      if (p.kind === 'record') ok = await insertRecord(p.row);
+      else if (p.kind === 'progress') { try { await saveProgressMax(p.user_id, p.key, p.count); ok = true; } catch (e) { ok = false; } }
+      if (!ok) left.push(p);
+    }
+    lsSet('pending', left);
+  } finally { flushing = false; }
+}
+function pendingRecs(user) {
+  return pendingList().filter((p) => p.kind === 'record' && p.row.user_id === user).map((p) => rowToRec(p.row));
+}
+function rowToRec(r) {
+  const [moduleId, level, tag] = r.theme.slice(THEME_PREFIX.length).split(':');
+  const total = r.total_q || 1;
+  return { date: r.played_at, moduleId, level, tag, total, correct: Math.round(r.score / 100 * total), score: r.score, time: r.time_sec ?? null };
+}
+let lastLoadOk = true;
 async function loadRecords() {
   if (!sb) return lsGet('records', []);
   const user = getNickname(); if (!user) return lsGet('records', []);
@@ -1079,13 +1165,11 @@ async function loadRecords() {
     const q = (cols) => sb.from('drill_records').select(cols).eq('user_id', user).like('theme', THEME_PREFIX + '%').order('played_at', { ascending: true });
     let { data, error } = await q('played_at, score, theme, total_q, time_sec');
     if (error) ({ data, error } = await q('played_at, score, theme, total_q'));
-    if (error || !data) return lsGet('records', []);          // テーブル未作成・通信エラー時は端末の記録
-    return data.map((r) => {
-      const [moduleId, level, tag] = r.theme.slice(THEME_PREFIX.length).split(':');
-      const total = r.total_q || 1;
-      return { date: r.played_at, moduleId, level, tag, total, correct: Math.round(r.score / 100 * total), score: r.score, time: r.time_sec ?? null };
-    });
-  } catch (e) { return lsGet('records', []); }
+    // まだ送れていない記録も この端末では見えるようにする
+    if (error || !data) { lastLoadOk = false; return pendingRecs(user); }
+    lastLoadOk = true;
+    return data.map(rowToRec).concat(pendingRecs(user)).sort((a, b) => new Date(a.date) - new Date(b.date));
+  } catch (e) { lastLoadOk = false; return pendingRecs(user); }
 }
 function recStats(recs) {
   const total = recs.reduce((s, r) => s + r.total, 0), correct = recs.reduce((s, r) => s + r.correct, 0);
@@ -1121,8 +1205,19 @@ function renderCalendar(recs) {
   }
   $('g-cal').innerHTML = html;
 }
+const WDAY = '日月火水木金土';
+function fmtWhen(d) { return `${d.getMonth() + 1}/${d.getDate()}(${WDAY[d.getDay()]}) ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function renderSyncInfo() {
+  if (!sb) { $('sync-info').textContent = ''; return; }
+  const n = pendingList().filter((p) => p.kind === 'record').length;
+  $('sync-info').textContent = n ? `⚠ まだ送れていない記録 ${n}件（つながったら自動で送ります）` : !lastLoadOk ? '⚠ 記録を読みこめませんでした（通信を確認）' : '';
+}
 async function renderTodayBar() {
-  const sum = daySummary(dailyCounts(await loadRecords()));
+  const recs = await loadRecords();
+  const last = recs.length ? new Date(recs[recs.length - 1].date) : null;
+  $('last-played').textContent = getNickname() ? (last ? `さいごに解いた日時 ${fmtWhen(last)}` : 'まだ解いた記録なし') : '';
+  renderSyncInfo();
+  const sum = daySummary(dailyCounts(recs));
   $('today-bar').innerHTML = `<span>今日 <b>${sum.today}</b>問</span><span>この7日 <b>${sum.week}</b>問</span>${sum.streak ? `<span>🔥 <b>${sum.streak}</b>日つづけて</span>` : ''}`;
 }
 
@@ -1337,8 +1432,17 @@ $('app-title').textContent = `${APP.emoji} ${APP.name}`;
 $('app-tagline').textContent = APP.tagline;
 $('version-badge').textContent = `${APP.version} · ${CHANGELOG[0].date}`;
 if (!SYNC_ENABLED) $('nickname-note').textContent = '記録に使います（いまはこの端末だけに保存されます）';
-renderTop(); updateNicknameBar(); loadMyProgress(); renderTodayBar();
+renderTop(); updateNicknameBar(); refreshFromServer();
 if (!getNickname()) showNicknameModal(false);
+// iPhoneのホーム画面アプリは何日も開きっぱなしになる。もどってきたら もう一方の端末の分を読み直す（解いている途中はしない）
+async function refreshFromServer() {
+  await flushPending();
+  await loadMyProgress(); await renderTodayBar();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || $('run-screen').classList.contains('active')) return;
+  refreshFromServer();
+});
 setTimeout(() => autoReport('open'), 3000);          // 前回から間隔があいていたら進捗メールを送る
 
 // =====================================================
