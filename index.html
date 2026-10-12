@@ -566,12 +566,13 @@ const APP = {
   name: '計算道場',
   emoji: '🧮',
   tagline: 'はやく・正確に。タイムをちぢめよう。',
-  version: 'v0.7.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
-  buildTime: '202610121352',      // yyyymmddhhmm ★デプロイのたびに更新
+  version: 'v0.8.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
+  buildTime: '202610121420',      // yyyymmddhhmm ★デプロイのたびに更新
   color: '#2d6fb0',               // メインカラー
   colorDark: '#1f5089',
   clearCount: 3,                  // シートの達成度 1=ぜんもん正解 2=○タイム 3=◎タイム。3で「クリア」
   runSize: 40,                    // 連続モードはシートを丸ごと解く（36問・18問）。これより多いシートだけ分割
+  keySec: 0.3,                    // ○◎タイムに足す「ボタン1回あたり」の秒数（本は手書き前提。テンキーは押すぶん時間がかかる）
   qCounts: [5, 10, 20],           // 一問一答の問題数の選択肢
   defaultQCount: 10,
   reportFunction: 'keisan-report',  // 進捗メールを送る Edge Function 名
@@ -581,6 +582,7 @@ const APP = {
 
 // 更新履歴（新しい版を先頭に追加）
 const CHANGELOG = [
+  { version: 'v0.8.0', date: '2026-10-12', items: ['○◎タイムに ボタン入力ぶんの時間を足しました（ボタン1回 0.3秒）', '分数の入力を 整数→分母→分子 の順に'] },
   { version: 'v0.7.0', date: '2026-10-12', items: ['分数のかけ算・わり算（5レベル）と 分数の混合計算（4レベル・3〜4つの分数）を追加', '履歴は さいきん10回だけ表示し、のこりは「すべての履歴」ページに', 'ランキング（みんなの計算履歴）を追加', 'ランク（ブロンズ〜レジェンド）と賞金の一覧を追加', '「このアプリと脳」（学術的な根拠）のページを追加'] },
   { version: 'v0.6.0', date: '2026-10-11', items: ['端末どうしの記録のズレを修正（アプリにもどったとき読み直す・◎を○で上書きしない・送れなかった記録はあとで送る）', 'あだなは これまでの あだなから えらべるように', 'バージョンの横に「さいごに解いた日時」を表示'] },
   { version: 'v0.5.0', date: '2026-10-11', items: ['進み具合を ✓=1・○=2・◎=3 のポイントで数えるように（◎でなくても進む）', 'きろくに「毎日の問題数」カレンダー、トップに今日・この7日・つづけた日数を表示'] },
@@ -648,8 +650,8 @@ const MODES = {
   K:   { fields: ['s1', 's2', 'ans'] },
   L2:  { fields: ['ans'], prompt: '最小公倍数は？' },
   L3:  { fields: ['ans'], prompt: '最小公倍数は？' },
-  F:   { fields: ['w', 'n', 'd'], prompt: '約分して、1より大きいときは帯分数で' },
-  FX:  { fields: ['w', 'n', 'd'], prompt: '×÷を先に。約分して、1より大きいときは帯分数で' },   // 分数の ×÷・混合（2〜4項）   // 整数・分子・分母（整数だけ／分数だけ もOK）
+  F:   { fields: ['w', 'd', 'n'], prompt: '約分して、1より大きいときは帯分数で' },
+  FX:  { fields: ['w', 'd', 'n'], prompt: '×÷を先に。約分して、1より大きいときは帯分数で' },   // 分数の ×÷・混合（2〜4項）   // 整数・分子・分母（整数だけ／分数だけ もOK）
 };
 const FIELD_NAME = { rem: 'あまり', w: '整数', n: '分子', d: '分母' };
 // 問題オブジェクト { op, a, b, mode, fields, ans:{枠: 正解} }
@@ -659,10 +661,10 @@ function makeProblem(op, row, mode) {
     return { op, mode, nums: row.slice(0, -1), fields: ['ans'], ans: { ans: row[row.length - 1] } };
   }
   if (mode === 'FX') {                            // 分数の ×÷・混合: { t: [[整数, 分子, 分母], ...], o: ['×','÷','+','−'], a: [答え] }
-    return { op, mode, terms: row.t, ops: row.o, fields: ['w', 'n', 'd'], ans: { w: row.a[0], n: row.a[1], d: row.a[2] } };
+    return { op, mode, terms: row.t, ops: row.o, fields: ['w', 'd', 'n'], ans: { w: row.a[0], n: row.a[1], d: row.a[2] } };
   }
   if (mode === 'F') {                             // 分数: [整数1, 分子1, 分母1, 符号, 整数2, 分子2, 分母2, 答え整数, 答え分子, 答え分母]
-    return { op, mode, x: row.slice(0, 3), sign: row[3], y: row.slice(4, 7), fields: ['w', 'n', 'd'], ans: { w: row[7], n: row[8], d: row[9] } };
+    return { op, mode, x: row.slice(0, 3), sign: row[3], y: row.slice(4, 7), fields: ['w', 'd', 'n'], ans: { w: row[7], n: row[8], d: row[9] } };
   }
   const m = moduleById(op), [a, b] = row;
   mode = MODES[mode] ? mode : (op === 'warizan' && a % b ? 'R' : 'N');
@@ -711,6 +713,12 @@ function fmtAnswer(q, v) {
 }
 function answerText(q) { return fmtAnswer(q, q.ans); }
 
+// 1問を答えるのに押すボタンの回数（数字 ＋ 枠ごとの「けってい／となりへ」）
+const digitsOf = (x) => String(Math.abs(x)).length;
+function keyCount(q) {
+  if (isFrac(q)) return (q.ans.w ? digitsOf(q.ans.w) : 0) + 1 + (q.ans.n == null ? 1 : digitsOf(q.ans.d) + 1 + digitsOf(q.ans.n) + 1);
+  return q.fields.reduce((sum, f) => sum + digitsOf(q.ans[f]) + 1, 0);
+}
 // シート → 連続モード1回ぶん（パート）。APP.runSize を超えるシートだけ分ける
 const PARTS = [];
 (function buildParts() {
@@ -722,14 +730,17 @@ const PARTS = [];
     for (let k = 0; k < n; k++) {
       const chunk = probs.slice(k * APP.runSize, (k + 1) * APP.runSize);
       const ratio = chunk.length / probs.length;
-      const scale = (t) => (t == null ? null : n > 1 ? Math.round(t * ratio / 5) * 5 : t);   // 分割したときは5秒単位で按分
+      // 入力ぶんの時間：このパートで押すボタンの回数 × keySec（5秒単位で切り上げ）
+      const allow = Math.ceil(chunk.reduce((sum, q) => sum + keyCount(q), 0) * APP.keySec / 5) * 5;
+      const scale = (t) => (t == null ? null : (n > 1 ? Math.round(t * ratio / 5) * 5 : t) + allow);   // 分割したときは5秒単位で按分
       const id = n > 1 ? `s${sh.no}-${k + 1}` : `s${sh.no}`;
       const sub = n > 1 ? (n === 2 ? (k ? '後半' : '前半') : `${k + 1}/${n}`) : '';
       PARTS.push({
         op: sh.op, level: sh.level, no: sh.no, id, lv: 'lv' + pad2(sh.level),
         key: `${sh.op}:lv${pad2(sh.level)}:${id}`,
         label: `${sh.level}-${sh.no}${sub ? ' ' + sub : ''}`,
-        probs: chunk, good: scale(good), great: scale(great), scaled: n > 1, dummy: !!sh.dummy,
+        probs: chunk, good: scale(good), great: scale(great), allow, scaled: n > 1, dummy: !!sh.dummy,
+        bookGood: good == null ? null : scale(good) - allow, bookGreat: great == null ? null : scale(great) - allow,
         mode: probs[0].mode, instruction: sh.instruction || '', example: sh.example || '',
       });
     }
@@ -1031,9 +1042,10 @@ function startRun(key) {
     (part.example ? `<div class="start-ex">（れい）${esc(fmtExample(part.example, part.mode))}</div>` : '') +
     `${run.qs.length}問を つづけて解こう<br>` +
     (part.great != null ? `◎タイム ${fmtTime(part.great)}　` : '') + (part.good != null ? `○タイム ${fmtTime(part.good)}` : '') +
+    (part.allow ? `<br><small>（本のタイム ◎${fmtTime(part.bookGreat)}・○${fmtTime(part.bookGood)} ＋ ボタン入力ぶん ${fmtTime(part.allow)}）</small>` : '') +
     (part.scaled ? '<br><small>（シートを分けたので タイムは目安）</small>' : '') +
     (progressMap[part.key] ? `<br>いまの記録：${RANK_MARK[progressMap[part.key]]}` : '') +
-    (part.mode === 'F' || part.mode === 'FX' ? `<br><small>整数→分子→分母の じゅんに入れる。分数だけのときは 整数の枠で そのまま「分子へ」</small>`
+    (part.mode === 'F' || part.mode === 'FX' ? `<br><small>整数→分母→分子の じゅんに入れる。分数だけのときは 整数の枠で そのまま「分母へ」</small>`
       : part.probs[0].fields.length > 1 ? `<br><small>左の枠から じゅんに入れて「けってい」</small>` : '');
   $('start-card').classList.remove('hidden');
   $('play-area').classList.add('hidden'); $('result-card').classList.add('hidden');
@@ -1094,7 +1106,7 @@ function renderAnswer() {
   const box = (f, i) => `<div class="ans-box${small}${f === 'rem' ? ' rem' : ''}${i === inp.fi ? ' active' : ''}" id="box-${f}" onclick="setField(${i})">${esc(inp.vals[f]) || '&nbsp;'}</div>`;
   let html;
   if (q.mode === 'R') html = box('ans', 0) + `<span class="ans-label">あまり</span>` + box('rem', 1);
-  else if (isFrac(q)) html = box('w', 0) + `<span class="frac-in">${box('n', 1)}<span class="frac-bar"></span>${box('d', 2)}</span>`;
+  else if (isFrac(q)) html = box('w', 0) + `<span class="frac-in">${box('n', 2)}<span class="frac-bar"></span>${box('d', 1)}</span>`;   // 入力は 整数→分母→分子（表示は分子が上）
   else if (q.fields.includes('s1')) { const sep = `<span class="ans-op">${moduleById(q.op).stepSep}</span>`; html = box('s1', 0) + sep + box('s2', 1) + `<span class="ans-op">=</span>` + box('ans', 2); }
   else html = box('ans', 0);
   $('ans-row').innerHTML = html;
@@ -1130,11 +1142,12 @@ function submitAnswer() {
   if (isFrac(q)) {
     // 分数：整数の枠は空でもよい（分数だけ）。分子・分母が空なら整数だけの答え
     const f = curField();
-    if (f === 'w' && V.n === '' && V.d === '') { setField(1); return; }                 // 整数 → 分子へ
-    if (f === 'n' && V.n !== '' && V.d === '') { setField(2); return; }                 // 分子 → 分母へ
+    const iD = q.fields.indexOf('d'), iN = q.fields.indexOf('n');
+    if (f === 'w' && V.n === '' && V.d === '') { setField(iD); return; }               // 整数 → 分母へ
+    if (f === 'd' && V.d !== '' && V.n === '') { setField(iN); return; }               // 分母 → 分子へ
     if (V.n === '' && V.d === '' && V.w === '') { setField(0); shakeBox(f); return; }
-    if ((V.n === '') !== (V.d === '')) { const e = V.n === '' ? 1 : 2; setField(e); shakeBox(q.fields[e]); return; }
-    if (V.d !== '' && parseInt(V.d, 10) === 0) { setField(2); shakeBox('d'); return; }
+    if ((V.n === '') !== (V.d === '')) { const e = V.d === '' ? iD : iN; setField(e); shakeBox(q.fields[e]); return; }
+    if (V.d !== '' && parseInt(V.d, 10) === 0) { setField(iD); shakeBox('d'); return; }
     vals = Object.fromEntries(q.fields.map((k) => [k, V[k] === '' ? NaN : parseInt(V[k], 10)]));
     ({ ok, reason = '' } = checkFraction(q, vals));
   } else {
