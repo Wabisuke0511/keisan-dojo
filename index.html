@@ -128,6 +128,8 @@
     .problem-card.inline .problem-hint { flex-basis: 100%; }
     .problem-card.inline .ans-row { margin-top: 0; flex-wrap: nowrap; }
     .problem-card.inline .problem-text { font-size: 2rem; }
+    .problem-card.long .problem-text { font-size: 1.55rem; white-space: normal; letter-spacing: 0; }
+    .problem-card.long .problem-text .op { margin: 0 .12em; }
     .frac-in { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; }
     .frac-bar { width: 100%; height: 3px; background: var(--text); border-radius: 2px; }
     .ans-box.sm.fr { min-width: 62px; min-height: 44px; font-size: 1.35rem; padding: 4px 8px; }
@@ -234,6 +236,47 @@
     .cal-legend { margin-top: 8px; font-size: .72rem; color: var(--muted); font-weight: 700; display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
     .cal-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
     .cal-legend i.c1 { background: #d6eaf8; } .cal-legend i.c2 { background: #85c1e9; } .cal-legend i.c3 { background: #3c8dcc; } .cal-legend i.c4 { background: #1f5089; }
+    /* 履歴・ランキング・ランク */
+    .link-more { width: 100%; margin-top: 12px; padding: 12px; border: 2px solid var(--primary); border-radius: 12px; background: var(--card); color: var(--primary-dark); font-size: .95rem; font-weight: 800; cursor: pointer; font-family: inherit; }
+    .h-day td { background: #f0f4f8; font-weight: 900; color: var(--primary-dark); font-size: .8rem; padding: 6px 4px; }
+    .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .home-action-btn.gold { background: #b7950b; }
+    .tier-chip { margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; flex-wrap: wrap; justify-content: center; }
+    .tier-chip:empty { display: none; }
+    .tier-pt { font-size: .8rem; font-weight: 800; opacity: .95; }
+    .tier { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .85rem; font-weight: 900; color: #fff; background: #95a5a6; white-space: nowrap; }
+    .tier.t-none { background: rgba(127,140,141,.6); }
+    .tier.t0 { background: #a0522d; } .tier.t1 { background: #7f8c8d; } .tier.t2 { background: #c9a227; } .tier.t3 { background: #3aa6a6; }
+    .tier.t4 { background: #2e86de; } .tier.t5 { background: #8e44ad; } .tier.t6 { background: #c0392b; } .tier.t7 { background: linear-gradient(90deg, #f39c12, #e84393, #6c5ce7); }
+    .tier-up { margin-top: 10px; padding: 12px; border-radius: 12px; background: #fff8e1; color: #b7950b; font-size: 1.1rem; font-weight: 900; }
+    .medal-now { text-align: center; }
+    .md-name { font-weight: 800; color: var(--muted); }
+    .md-badge { margin: 8px 0; } .md-badge .tier { font-size: 1.3rem; padding: 6px 18px; }
+    .md-pt { font-size: 2rem; font-weight: 900; color: var(--primary-dark); } .md-pt small { font-size: .9rem; color: var(--muted); }
+    .md-row { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid #eef1f4; opacity: .6; }
+    .md-row.got { opacity: 1; }
+    .md-ic { font-size: 1.6rem; } .md-info { flex: 1; display: flex; flex-direction: column; } .md-info small { color: var(--muted); font-weight: 700; }
+    .md-yen { font-weight: 900; color: #b7950b; }
+    .md-lock { font-size: .75rem; color: var(--muted); font-weight: 800; }
+    .md-give { padding: 6px 10px; border: 2px solid #b7950b; border-radius: 10px; background: #fff; color: #b7950b; font-weight: 800; font-size: .8rem; cursor: pointer; font-family: inherit; }
+    .md-give.on { background: #b7950b; color: #fff; }
+    .md-total { margin-top: 12px; font-size: .85rem; font-weight: 700; color: var(--muted); line-height: 1.6; }
+    .md-total b { color: #b7950b; font-size: 1.05rem; }
+    .rk-card { background: var(--card); border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 14px 16px; margin-bottom: 12px; }
+    .rk-card.me { box-shadow: 0 0 0 2px var(--accent), 0 2px 8px rgba(0,0,0,.08); }
+    .rk-head { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .rk-pos { font-size: 1.6rem; width: 36px; text-align: center; font-weight: 900; color: var(--muted); }
+    .rk-name { flex: 1; font-weight: 900; font-size: 1.05rem; line-height: 1.7; }
+    .rk-val { font-size: 1.6rem; font-weight: 900; color: var(--primary-dark); } .rk-val small { font-size: .8rem; color: var(--muted); }
+    .rk-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 8px; margin-top: 10px; font-size: .78rem; color: var(--muted); font-weight: 700; }
+    .rk-stats b { color: var(--text); font-size: .95rem; }
+    .rk-last { margin-top: 6px; font-size: .75rem; color: var(--muted); font-weight: 700; }
+    .rk-hist { display: none; margin-top: 10px; overflow-x: auto; }
+    .rk-card.open .rk-hist { display: block; }
+    .about p, .about li { font-size: .92rem; line-height: 1.8; margin-bottom: 8px; }
+    .about ul, .about ol { padding-left: 1.2em; }
+    .about .refs li { font-size: .75rem; line-height: 1.6; color: var(--muted); }
+    .about-table td, .about-table th { font-size: .78rem; }
     .reset-btn { background: none; border: 2px solid var(--line); color: var(--muted); border-radius: 12px; padding: 12px; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: inherit; }
 
     /* ── 進捗メール ── */
@@ -277,14 +320,20 @@
       <span>あだな：<span class="nickname-name" id="nickname-display">（未設定）</span></span>
       <button class="nickname-change-btn" onclick="showNicknameModal(true)">変える</button>
     </div>
+    <div class="tier-chip" id="tier-chip" onclick="showMedals()"></div>
     <div class="today-bar" id="today-bar" onclick="showGraph()"></div>
     <div><button class="version-badge" id="version-badge" onclick="showVersionHistory()"></button><span class="last-played" id="last-played"></span></div>
     <div class="sync-info" id="sync-info"></div>
   </div>
   <div class="categories-list" id="categories-list"></div>
   <div class="top-actions">
-    <button class="home-action-btn" onclick="showGraph()">📊 きろく（グラフ）を見る</button>
+    <button class="home-action-btn" onclick="showGraph()">📊 きろく（グラフ・履歴）</button>
+    <div class="action-row">
+      <button class="home-action-btn gold" onclick="showRanking()">🏆 ランキング</button>
+      <button class="home-action-btn gold" onclick="showMedals()">🏅 ランクと賞金</button>
+    </div>
     <button class="home-action-btn sub" onclick="showReport()">📬 進捗をメールで送る</button>
+    <button class="home-action-btn sub" onclick="showAbout()">🧠 このアプリと脳（学術的な根拠）</button>
   </div>
 </div>
 
@@ -374,11 +423,7 @@
       <div class="cal" id="g-cal"></div>
       <div class="cal-legend">少ない <i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i> 多い　（数字＝その日に解いた問題数）</div>
     </div>
-    <div class="graph-card">
-      <div class="graph-card-title" id="g-progress-title"></div>
-      <div class="pp-note" id="g-progress-note"></div>
-      <div id="g-progress-list"></div>
-    </div>
+    <button class="link-more" onclick="showRanking()">🏆 みんなのランキングを見る ›</button>
     <div class="graph-card">
       <div class="graph-card-title">📊 種目別 正答率</div>
       <canvas id="g-acc-chart" height="180"></canvas>
@@ -399,15 +444,72 @@
       <div class="dots-row" id="g-dots"></div>
     </div>
     <div class="graph-card">
-      <div class="graph-card-title">📋 履歴一覧</div>
+      <div class="graph-card-title">📋 履歴（さいきんの10回）</div>
       <div class="hist-wrap"><table class="hist-table" id="g-history-table">
         <thead><tr><th>日時</th><th>問題</th><th>せいせき</th><th>タイム</th></tr></thead>
         <tbody id="g-history-body"></tbody>
       </table></div>
       <div id="g-history-empty" class="no-records hidden">まだ きろくがありません</div>
+      <button class="link-more hidden" id="g-history-more" onclick="showHistory()"></button>
     </div>
     <button class="reset-btn" onclick="clearRecords()">きろくを リセットする</button>
   </div>
+</div>
+
+<!-- ===== すべての履歴 ===== -->
+<div id="history-screen" class="screen">
+  <div class="sub-header">
+    <button class="back-btn" onclick="showGraph()">← もどる</button>
+    <h2 id="history-title">すべての履歴</h2>
+  </div>
+  <div class="graph-body">
+    <div class="graph-card">
+      <div class="pp-note" id="h-note"></div>
+      <div class="hist-wrap"><table class="hist-table">
+        <thead><tr><th>日時</th><th>問題</th><th>せいせき</th><th>タイム</th></tr></thead>
+        <tbody id="h-body"></tbody>
+      </table></div>
+      <button class="link-more hidden" id="h-more" onclick="moreHistory()">もっと見る（50回ずつ）</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ランキング ===== -->
+<div id="ranking-screen" class="screen">
+  <div class="sub-header" style="background:#b7950b">
+    <button class="back-btn" onclick="goTop()">← もどる</button>
+    <h2>🏆 ランキング</h2>
+  </div>
+  <div class="graph-body">
+    <div class="qcount-bar" id="rk-sort"></div>
+    <div id="rk-list"><div class="pp-note">よみこみ中…</div></div>
+    <div class="pp-note">名前をおすと、その人の さいきんの計算履歴が見られます。進みポイント：✓=1 ○=2 ◎=3（シートごとの最高）</div>
+  </div>
+</div>
+
+<!-- ===== ランクと賞金 ===== -->
+<div id="medal-screen" class="screen">
+  <div class="sub-header" style="background:#b7950b">
+    <button class="back-btn" onclick="goTop()">← もどる</button>
+    <h2>🏅 ランクと賞金</h2>
+  </div>
+  <div class="graph-body">
+    <div class="graph-card medal-now" id="md-now"></div>
+    <div class="graph-card">
+      <div class="graph-card-title">ランク一覧（ランクが上がるたびに賞金）</div>
+      <div id="md-list"></div>
+      <div class="pp-note" style="margin-top:10px">進みポイントは、シートごとの最高記録で決まります（✓ぜんもん正解=1・○タイム=2・◎タイム=3）。同じシートを何回といても、ふえるのは記録をこえたときだけ。<br>「わたした」は おうちの人が賞金をわたしたら おしてください（2台のiPhoneで共有されます）。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== このアプリと脳 ===== -->
+<div id="about-screen" class="screen">
+  <div class="sub-header">
+    <button class="back-btn" onclick="goTop()">← もどる</button>
+    <h2>🧠 このアプリと脳</h2>
+  </div>
+  <div class="graph-body about" id="about-body"></div>
 </div>
 
 <!-- ===== 進捗メール ===== -->
@@ -464,8 +566,8 @@ const APP = {
   name: '計算道場',
   emoji: '🧮',
   tagline: 'はやく・正確に。タイムをちぢめよう。',
-  version: 'v0.6.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
-  buildTime: '202610112011',      // yyyymmddhhmm ★デプロイのたびに更新
+  version: 'v0.7.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
+  buildTime: '202610121352',      // yyyymmddhhmm ★デプロイのたびに更新
   color: '#2d6fb0',               // メインカラー
   colorDark: '#1f5089',
   clearCount: 3,                  // シートの達成度 1=ぜんもん正解 2=○タイム 3=◎タイム。3で「クリア」
@@ -479,6 +581,7 @@ const APP = {
 
 // 更新履歴（新しい版を先頭に追加）
 const CHANGELOG = [
+  { version: 'v0.7.0', date: '2026-10-12', items: ['分数のかけ算・わり算（5レベル）と 分数の混合計算（4レベル・3〜4つの分数）を追加', '履歴は さいきん10回だけ表示し、のこりは「すべての履歴」ページに', 'ランキング（みんなの計算履歴）を追加', 'ランク（ブロンズ〜レジェンド）と賞金の一覧を追加', '「このアプリと脳」（学術的な根拠）のページを追加'] },
   { version: 'v0.6.0', date: '2026-10-11', items: ['端末どうしの記録のズレを修正（アプリにもどったとき読み直す・◎を○で上書きしない・送れなかった記録はあとで送る）', 'あだなは これまでの あだなから えらべるように', 'バージョンの横に「さいごに解いた日時」を表示'] },
   { version: 'v0.5.0', date: '2026-10-11', items: ['進み具合を ✓=1・○=2・◎=3 のポイントで数えるように（◎でなくても進む）', 'きろくに「毎日の問題数」カレンダー、トップに今日・この7日・つづけた日数を表示'] },
   { version: 'v0.4.0', date: '2026-10-10', items: ['「最小公倍数」（4レベル）と「分数のたし算・ひき算」（8レベル）を追加', '分数は たて書きで表示。答えは 整数・分子・分母 の枠に入れる（約分・帯分数もチェック）'] },
@@ -530,6 +633,8 @@ registerModule({ id: 'warizan',  name: 'わり算', icon: '➗', sym: '÷', colo
 // 分数に強くなるための追加教材（本にはない・自動生成）
 registerModule({ id: 'lcm',   name: '最小公倍数', icon: '🔗', sym: 'と', color: '#c0392b', solve: () => null });
 registerModule({ id: 'bunsu', name: '分数のたし算・ひき算', icon: '🍰', sym: '', color: '#16a085', solve: () => null });
+registerModule({ id: 'bunsu2', name: '分数のかけ算・わり算', icon: '🥧', sym: '', color: '#d35400', solve: () => null });
+registerModule({ id: 'bunsu3', name: '分数の混合計算', icon: '🧁', sym: '', color: '#6c3483', solve: () => null });
 function moduleById(id) { return modules.find((m) => m.id === id); }
 
 // 問題の形式（problems.js の mode）。fields = 入力する枠（左から順に入れる）
@@ -543,7 +648,8 @@ const MODES = {
   K:   { fields: ['s1', 's2', 'ans'] },
   L2:  { fields: ['ans'], prompt: '最小公倍数は？' },
   L3:  { fields: ['ans'], prompt: '最小公倍数は？' },
-  F:   { fields: ['w', 'n', 'd'], prompt: '約分して、1より大きいときは帯分数で' },   // 整数・分子・分母（整数だけ／分数だけ もOK）
+  F:   { fields: ['w', 'n', 'd'], prompt: '約分して、1より大きいときは帯分数で' },
+  FX:  { fields: ['w', 'n', 'd'], prompt: '×÷を先に。約分して、1より大きいときは帯分数で' },   // 分数の ×÷・混合（2〜4項）   // 整数・分子・分母（整数だけ／分数だけ もOK）
 };
 const FIELD_NAME = { rem: 'あまり', w: '整数', n: '分子', d: '分母' };
 // 問題オブジェクト { op, a, b, mode, fields, ans:{枠: 正解} }
@@ -551,6 +657,9 @@ const FIELD_NAME = { rem: 'あまり', w: '整数', n: '分子', d: '分母' };
 function makeProblem(op, row, mode) {
   if (mode === 'L2' || mode === 'L3') {           // 最小公倍数: [a, b, (c,) 答え]
     return { op, mode, nums: row.slice(0, -1), fields: ['ans'], ans: { ans: row[row.length - 1] } };
+  }
+  if (mode === 'FX') {                            // 分数の ×÷・混合: { t: [[整数, 分子, 分母], ...], o: ['×','÷','+','−'], a: [答え] }
+    return { op, mode, terms: row.t, ops: row.o, fields: ['w', 'n', 'd'], ans: { w: row.a[0], n: row.a[1], d: row.a[2] } };
   }
   if (mode === 'F') {                             // 分数: [整数1, 分子1, 分母1, 符号, 整数2, 分子2, 分母2, 答え整数, 答え分子, 答え分母]
     return { op, mode, x: row.slice(0, 3), sign: row[3], y: row.slice(4, 7), fields: ['w', 'n', 'd'], ans: { w: row[7], n: row[8], d: row[9] } };
@@ -565,15 +674,18 @@ function makeProblem(op, row, mode) {
 // 分数の文字表記（2と1/3）と、たて書きのHTML
 const has = (x) => x != null && !isNaN(x);
 const fracStr = (w, n, d) => (!has(n) ? String(has(w) ? w : '？') : `${has(w) && w ? w + 'と' : ''}${n}/${has(d) ? d : '？'}`);
+const isFrac = (q) => q.mode === 'F' || q.mode === 'FX';     // 答えが 整数・分子・分母 の問題
 const fracHTML = (w, n, d) => `${w ? `<span class="fw">${w}</span>` : ''}<span class="frac"><span>${n}</span><span>${d}</span></span>`;
 function problemText(q) {
   if (q.nums) return q.nums.join(' と ');
   if (q.x) return `${fracStr(...q.x)} ${q.sign === '+' ? '+' : '−'} ${fracStr(...q.y)}`;
+  if (q.terms) return q.terms.map((t, i) => (i ? ` ${q.ops[i - 1]} ` : '') + fracStr(...t)).join('');
   const m = moduleById(q.op); return `${q.a} ${m.sym} ${q.b}`;
 }
 function problemHTML(q) {
   if (q.nums) return q.nums.map((x) => `<span>${x}</span>`).join('<span class="op small">と</span>');
   if (q.x) return `${fracHTML(...q.x)}<span class="op">${q.sign === '+' ? '+' : '−'}</span>${fracHTML(...q.y)}<span class="op">=</span>`;
+  if (q.terms) return q.terms.map((t, i) => (i ? `<span class="op">${q.ops[i - 1]}</span>` : '') + (t[1] == null ? `<span>${t[0]}</span>` : fracHTML(...t))).join('') + '<span class="op">=</span>';
   const m = moduleById(q.op); return `${q.a}<span class="op">${m.sym}</span>${q.b}<span class="op">=</span>`;
 }
 // 分数の答えあわせ。値が同じでも、約分していない・帯分数にしていないときは不正解（理由を返す）
@@ -591,7 +703,7 @@ function checkFraction(q, v) {
 }
 // 答えの書き方（v = {枠: 値}）。正解の表示にも、まちがえた答えの表示にも使う
 function fmtAnswer(q, v) {
-  if (q.mode === 'F') return fracStr(v.w, v.n, v.d);
+  if (isFrac(q)) return fracStr(v.w, v.n, v.d);
   const s = (k) => (v[k] ?? v[k] === 0 ? String(v[k]) : '？');
   if (q.mode === 'R') return `${s('ans')} あまり ${s('rem')}`;
   if (q.fields.includes('s1')) return `${s('s1')} ${moduleById(q.op).stepSep} ${s('s2')} = ${s('ans')}`;
@@ -761,35 +873,6 @@ async function loadAllProgress() {
     return error || !data ? [] : data;
   } catch (e) { return []; }
 }
-async function renderPlayersProgress() {
-  const scope = activeOp ? [activeOp] : modules.map((m) => m.id);
-  const total = scope.reduce((s, id) => s + partsOf(id).length, 0);
-  $('g-progress-title').textContent = '🏅 みんなの進み具合（✓=1 ○=2 ◎=3 ポイント）';
-  $('g-progress-note').textContent = `${activeOp ? moduleById(activeOp).name + ' の ' : 'ぜんぶで '}${total}シート`;
-  const list = $('g-progress-list');
-  list.innerHTML = '<div class="pp-note">よみこみ中…</div>';
-
-  const me = getNickname(), meKey = me || '（あなた）';
-  const maps = new Map([[meKey, progressMap]]);  // 自分は端末の最新を使う
-  (await loadAllProgress()).forEach((r) => {
-    if (r.user_id === me) return;
-    if (!maps.has(r.user_id)) maps.set(r.user_id, {});
-    maps.get(r.user_id)[r.item_key] = r.count;
-  });
-  const players = [...maps.entries()].map(([name, map]) => {
-    const per = scope.map((id) => ({ m: moduleById(id), p: moduleProgress(id, map) })).filter((x) => x.p.total);
-    const points = per.reduce((s, x) => s + x.p.points, 0), done = per.reduce((s, x) => s + x.p.done, 0);
-    return { name, points, done, pct: total ? Math.round(points / (total * APP.clearCount) * 100) : 0, per, isMe: name === meKey };
-  }).sort((a, b) => b.points - a.points);
-  const medals = ['🥇', '🥈', '🥉'];
-  list.innerHTML = players.map((p, i) => `
-    <div class="pp-row${p.isMe ? ' me' : ''}">
-      <div class="pp-head"><span>${medals[i] || '　'}</span><span class="pp-name">${esc(p.name)}</span>
-        ${p.isMe ? '<span class="pp-me-tag">あなた</span>' : ''}<span class="pp-val">${p.pct}%（✓以上 ${p.done}/${total}）</span></div>
-      <div class="pp-track"><div class="pp-fill" style="width:${p.pct}%"></div></div>
-      <div class="pp-mods">${p.per.map((x) => `<span class="pp-mod${x.p.great >= x.p.total ? ' done' : ''}">${x.m.icon} ${x.p.pct}%</span>`).join('')}</div>
-    </div>`).join('') + (sb ? '' : '<div class="pp-note">※ Supabase未設定のため、この端末の記録だけ表示しています</div>');
-}
 
 // =====================================================
 //  画面遷移
@@ -804,6 +887,7 @@ function showOp(id) { activeOp = id; renderOp(); showScreen('op-screen'); }
 function backToOp() { stopTimer(); run = null; if (activeOp) { renderOp(); showScreen('op-screen'); } else goTop(); }
 
 function renderTop() {
+  renderTierChip();
   $('categories-list').innerHTML = '';
   modules.forEach((m) => {
     const p = moduleProgress(m.id), lvs = levelsOf(m.id);
@@ -827,6 +911,59 @@ function renderQCountBar() {
   });
 }
 const RANK_MARK = ['', '✓', '○', '◎'];
+// ランク：進みポイント（全シートの ✓1・○2・◎3 の合計）で決まる。賞金はランクが1つ上がるごとに1000円ずつふえる
+// pt: null は「全シート◎（満点）」
+const TIERS = [
+  { name: 'ブロンズ',       icon: '🥉', pt: 30 },
+  { name: 'シルバー',       icon: '🥈', pt: 80 },
+  { name: 'ゴールド',       icon: '🥇', pt: 150 },
+  { name: 'プラチナ',       icon: '💠', pt: 240 },
+  { name: 'ダイヤモンド',   icon: '💎', pt: 350 },
+  { name: 'マスター',       icon: '👑', pt: 480 },
+  { name: 'グランドマスター', icon: '🏆', pt: 600 },
+  { name: 'レジェンド',     icon: '🌟', pt: null },
+].map((t, i) => ({ ...t, yen: (i + 1) * 1000 }));
+const tierPt = (t) => t.pt ?? PARTS.length * APP.clearCount;
+const allKeys = () => PARTS.map((p) => p.key);
+function playerPoints(map) { return progressOf(allKeys(), map).points; }
+function tierOf(points) { let k = -1; TIERS.forEach((t, i) => { if (points >= tierPt(t)) k = i; }); return k; }   // -1 = まだランクなし
+const yen = (n) => n.toLocaleString('ja-JP') + '円';
+function tierBadge(k) { return k < 0 ? '<span class="tier t-none">ランクなし</span>' : `<span class="tier t${k}">${TIERS[k].icon} ${TIERS[k].name}</span>`; }
+function renderTierChip() {
+  const pts = playerPoints(), k = tierOf(pts), nx = TIERS[k + 1];
+  $('tier-chip').innerHTML = getNickname() ? `${tierBadge(k)}<span class="tier-pt">${pts}pt${nx ? `・${nx.name}まで あと${tierPt(nx) - pts}pt` : ''}</span>` : '';
+}
+async function showMedals() {
+  showScreen('medal-screen');
+  const pts = playerPoints(), k = tierOf(pts), nx = TIERS[k + 1], prev = k >= 0 ? tierPt(TIERS[k]) : 0;
+  const pct = nx ? Math.round((pts - prev) / (tierPt(nx) - prev) * 100) : 100;
+  $('md-now').innerHTML = `<div class="md-name">${esc(getNickname() || '（あだな未設定）')} さん</div>
+    <div class="md-badge">${tierBadge(k)}</div><div class="md-pt">${pts} <small>/ ${PARTS.length * APP.clearCount} pt</small></div>
+    ${nx ? `<div class="pp-track" style="margin:10px 0 6px"><div class="pp-fill" style="width:${pct}%"></div></div>
+      <div class="pp-note">つぎの ${nx.icon}${nx.name} まで あと <b>${tierPt(nx) - pts}pt</b>（賞金 ${yen(nx.yen)}）</div>` : '<div class="pp-note">🌟 ぜんぶのシートを◎にしました！</div>'}`;
+  const given = (i) => (progressMap['reward:' + i] || 0) >= 1;
+  $('md-list').innerHTML = TIERS.map((t, i) => {
+    const got = pts >= tierPt(t);
+    return `<div class="md-row${got ? ' got' : ''}">
+      <span class="md-ic">${t.icon}</span>
+      <span class="md-info"><b>${t.name}</b><small>${t.pt == null ? 'ぜんぶのシートを◎（' + tierPt(t) + 'pt）' : t.pt + 'pt'}</small></span>
+      <span class="md-yen">${yen(t.yen)}</span>
+      <span class="md-st">${!got ? '<span class="md-lock">まだ</span>'
+        : `<button class="md-give${given(i) ? ' on' : ''}" onclick="toggleGiven(${i})">${given(i) ? '✓ わたした' : 'わたした？'}</button>`}</span></div>`;
+  }).join('') + `<div class="md-total">ここまでの賞金 合計 <b>${yen(TIERS.filter((t) => pts >= tierPt(t)).reduce((s, t) => s + t.yen, 0))}</b>
+    （わたしずみ ${yen(TIERS.filter((t, i) => given(i)).reduce((s, t) => s + t.yen, 0))}）／ぜんぶで ${yen(TIERS.reduce((s, t) => s + t.yen, 0))}</div>`;
+}
+// 「わたした」は進みポイントとは別に drill_progress に 'reward:番号' として保存（2台で共有）
+async function toggleGiven(i) {
+  const key = 'reward:' + i, now = (progressMap[key] || 0) >= 1, t = TIERS[i];
+  if (!confirm(now ? `${t.name}の賞金を「まだ わたしていない」にもどしますか？` : `${t.name}の賞金 ${yen(t.yen)} を わたしましたか？`)) return;
+  progressMap[key] = now ? 0 : 1;
+  if (sb && getNickname()) {
+    const { error } = await sb.from('drill_progress').upsert({ user_id: getNickname(), app: APP.id, item_key: key, count: progressMap[key], updated_at: new Date().toISOString() }, { onConflict: 'user_id,app,item_key' });
+    if (error) { alert('保存できませんでした。通信を確かめてください'); progressMap[key] = now ? 1 : 0; }
+  } else lsSet('progress', progressMap);
+  showMedals();
+}
 function renderOp() {
   const m = moduleById(activeOp);
   $('op-header').style.background = m.color;
@@ -896,7 +1033,7 @@ function startRun(key) {
     (part.great != null ? `◎タイム ${fmtTime(part.great)}　` : '') + (part.good != null ? `○タイム ${fmtTime(part.good)}` : '') +
     (part.scaled ? '<br><small>（シートを分けたので タイムは目安）</small>' : '') +
     (progressMap[part.key] ? `<br>いまの記録：${RANK_MARK[progressMap[part.key]]}` : '') +
-    (part.mode === 'F' ? `<br><small>整数→分子→分母の じゅんに入れる。分数だけのときは 整数の枠で そのまま「分子へ」</small>`
+    (part.mode === 'F' || part.mode === 'FX' ? `<br><small>整数→分子→分母の じゅんに入れる。分数だけのときは 整数の枠で そのまま「分子へ」</small>`
       : part.probs[0].fields.length > 1 ? `<br><small>左の枠から じゅんに入れて「けってい」</small>` : '');
   $('start-card').classList.remove('hidden');
   $('play-area').classList.add('hidden'); $('result-card').classList.add('hidden');
@@ -935,13 +1072,15 @@ function startOne(op, level, list) {
 let inp = { vals: {}, fi: 0, locked: false };
 const curQ = () => run && run.qs[run.idx];
 const curField = () => curQ().fields[inp.fi];
-function fmtExample(s, mode) { return (mode === 'F' ? s : s.replace(/\//g, '÷')).replace(/\*/g, '×').replace(/-/g, '−').replace(/(\d)r(\d)/, '$1 あまり $2'); }
+function fmtExample(s, mode) { return (mode === 'F' || mode === 'FX' ? s : s.replace(/\//g, '÷')).replace(/\*/g, '×').replace(/-/g, '−').replace(/(\d)r(\d)/, '$1 あまり $2'); }
 function showProblem() {
   const q = curQ();
   inp = { vals: Object.fromEntries(q.fields.map((f) => [f, ''])), fi: 0, locked: false };
   run.qT0 = performance.now();
   $('problem-text').innerHTML = problemHTML(q);
-  $('problem-card').classList.toggle('inline', q.mode === 'F');   // 分数は 問題と答えを横に並べる
+  // 分数は 問題と答えを横に並べる（3〜4項の式は長いので、答えは下の行）
+  $('problem-card').classList.toggle('inline', q.mode === 'F' || (q.mode === 'FX' && q.terms.length === 2));
+  $('problem-card').classList.toggle('long', q.mode === 'FX' && q.terms.length >= 3);
   const hint = MODES[q.mode].hint, part = run.part || partsOf(q.op, run.level).find((p) => p.mode === q.mode);
   $('problem-hint').textContent = MODES[q.mode].prompt ? MODES[q.mode].prompt : hint ? `${hint}だけ こたえる` : (q.fields.includes('s1') && part ? `（れい）${fmtExample(part.example)}` : '');
   $('run-count').textContent = `${run.idx + 1} / ${run.qs.length}問`;
@@ -951,11 +1090,11 @@ function showProblem() {
   const card = $('problem-card'); card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
 }
 function renderAnswer() {
-  const q = curQ(), small = q.fields.length >= 3 ? (q.mode === 'F' ? ' sm fr' : ' sm') : '';
+  const q = curQ(), small = q.fields.length >= 3 ? (isFrac(q) ? ' sm fr' : ' sm') : '';
   const box = (f, i) => `<div class="ans-box${small}${f === 'rem' ? ' rem' : ''}${i === inp.fi ? ' active' : ''}" id="box-${f}" onclick="setField(${i})">${esc(inp.vals[f]) || '&nbsp;'}</div>`;
   let html;
   if (q.mode === 'R') html = box('ans', 0) + `<span class="ans-label">あまり</span>` + box('rem', 1);
-  else if (q.mode === 'F') html = box('w', 0) + `<span class="frac-in">${box('n', 1)}<span class="frac-bar"></span>${box('d', 2)}</span>`;
+  else if (isFrac(q)) html = box('w', 0) + `<span class="frac-in">${box('n', 1)}<span class="frac-bar"></span>${box('d', 2)}</span>`;
   else if (q.fields.includes('s1')) { const sep = `<span class="ans-op">${moduleById(q.op).stepSep}</span>`; html = box('s1', 0) + sep + box('s2', 1) + `<span class="ans-op">=</span>` + box('ans', 2); }
   else html = box('ans', 0);
   $('ans-row').innerHTML = html;
@@ -988,7 +1127,7 @@ function shakeBox(f) { const el = $('box-' + f); if (el) { el.classList.add('sha
 function submitAnswer() {
   const q = curQ(), V = inp.vals;
   let vals, ok, reason = '';
-  if (q.mode === 'F') {
+  if (isFrac(q)) {
     // 分数：整数の枠は空でもよい（分数だけ）。分子・分母が空なら整数だけの答え
     const f = curField();
     if (f === 'w' && V.n === '' && V.d === '') { setField(1); return; }                 // 整数 → 分子へ
@@ -1064,7 +1203,10 @@ async function finishRun() {
   let rank = 0, best = null;
   if (run.mode === 'run') {
     rank = rankOf(run.part, correct, total, sec);
+    const tierBefore = tierOf(playerPoints());
     best = bumpBest(run.part.key, rank);
+    const tierAfter = tierOf(playerPoints());
+    run.tierUp = tierAfter > tierBefore ? tierAfter : null;
     const icons = ['💪', '👍', '⭕', '🎉'], names = ['もういちど チャレンジ！', 'ぜんもん正解！', '○タイム たっせい！', '◎タイム たっせい！'];
     $('result-icon').textContent = icons[rank];
     $('result-rank').textContent = names[rank]; $('result-rank').className = 'result-rank r' + rank;
@@ -1072,7 +1214,8 @@ async function finishRun() {
     const p = run.part;
     $('result-detail').innerHTML = `${total}問中 ${correct}問正解` +
       (p.great != null || p.good != null ? `<br>◎ ${fmtTime(p.great)}　○ ${fmtTime(p.good)}${p.scaled ? '（目安）' : ''}` : '');
-    $('result-best').textContent = best.improved && best.prev ? `きろく こうしん！ ${RANK_MARK[best.prev]} → ${RANK_MARK[rank]}` : '';
+    $('result-best').innerHTML = (best.improved && best.prev ? `きろく こうしん！ ${RANK_MARK[best.prev]} → ${RANK_MARK[rank]}` : '') +
+      (run.tierUp != null ? `<div class="tier-up">🎉 ${TIERS[run.tierUp].icon} ${TIERS[run.tierUp].name}ランクに 上がった！<br>賞金 ${yen(TIERS[run.tierUp].yen)}</div>` : '');
     $('btn-retry').textContent = 'もういちど（同じシート）';
   } else {
     const pct = Math.round(correct / total * 100), avg = run.results.reduce((s, r) => s + r.sec, 0) / total;
@@ -1232,7 +1375,6 @@ function destroyCharts() {
 async function showGraph() {
   $('graph-title').textContent = activeOp ? `${moduleById(activeOp).name} のきろく` : 'きろく（全体）';
   showScreen('graph-screen');
-  renderPlayersProgress();
   await renderGraph();
 }
 async function renderGraph() {
@@ -1254,13 +1396,10 @@ async function renderGraph() {
   const empt = { acc: $('g-acc-empty'), cnt: $('g-cnt-empty'), line: $('g-line-empty') };
   const showEmpty = (msg) => Object.keys(canv).forEach((k) => { canv[k].style.display = 'none'; empt[k].textContent = msg; empt[k].classList.remove('hidden'); });
 
-  // 履歴表
-  $('g-history-body').innerHTML = recs.slice().reverse().slice(0, 30).map((r) => {
-    const d = new Date(r.date), ds = `${d.getMonth() + 1}/${d.getDate()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-    const cls = r.score >= 100 ? 'hist-high' : r.score >= 80 ? 'hist-mid' : 'hist-low';
-    return `<tr><td>${ds}</td><td>${esc(recLabel(r))}</td>
-      <td class="${cls}">${r.correct}/${r.total}</td><td>${r.time != null ? fmtTime(r.time) : '-'}</td></tr>`;
-  }).join('');
+  // 履歴表（さいきんの10回。のこりは「すべての履歴」ページ）
+  $('g-history-body').innerHTML = recs.slice().reverse().slice(0, 10).map(histRow).join('');
+  $('g-history-more').classList.toggle('hidden', recs.length <= 10);
+  $('g-history-more').textContent = `📋 すべての履歴を見る（全${recs.length}回） ›`;
   $('g-history-table').style.display = recs.length ? '' : 'none';
   $('g-history-empty').classList.toggle('hidden', recs.length > 0);
 
@@ -1285,6 +1424,151 @@ async function renderGraph() {
       datasets: [{ data: recs.map((r) => r.score), borderColor: APP.color, backgroundColor: 'rgba(45,111,176,.1)', borderWidth: 2.5, pointBackgroundColor: pts, pointBorderColor: pts, pointRadius: 6, tension: .3, fill: true }] },
     options: { plugins: { legend: { display: false } }, scales: { y: { min: 0, max: 100, ticks: { callback: (v) => v + '%' } }, x: { ticks: { maxRotation: 45, font: { size: 10 } }, grid: { display: false } } } } });
 }
+function histRow(r) {
+  const d = new Date(r.date), ds = `${d.getMonth() + 1}/${d.getDate()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const cls = r.score >= 100 ? 'hist-high' : r.score >= 80 ? 'hist-mid' : 'hist-low';
+  return `<tr><td>${ds}</td><td>${esc(recLabel(r))}</td>
+    <td class="${cls}">${r.correct}/${r.total}</td><td>${r.time != null ? fmtTime(r.time) : '-'}</td></tr>`;
+}
+// ---------- このアプリと脳（学術的な根拠） ----------
+function showAbout() { $('about-body').innerHTML = ABOUT_HTML; showScreen('about-screen'); }
+const ABOUT_HTML = `
+<div class="graph-card">
+  <div class="graph-card-title">さいしょに（正直に）</div>
+  <p>「計算ドリルをすれば認知症（ボケ）を防げる」と言い切れるほどの強い証拠は、まだありません。ここでは、研究で<b>わかっていること</b>と<b>わかっていないこと</b>を分けて書きます。医学的なアドバイスではありません。</p>
+</div>
+<div class="graph-card">
+  <div class="graph-card-title">① 計算しているとき、脳では</div>
+  <p>かんたんな計算をしているとき、<b>前頭前野</b>（考える・覚えておく・切りかえる を受けもつ脳のおでこ側）が左右とも働くことが、fMRI（脳の働きを画像で見る方法）で確かめられています［1］。</p>
+  <p>九九のように「覚えている答えをすぐ取り出す」計算では、左の頭頂葉（角回）がよく働きます。中学生の時点でこの使い方ができている子ほど、高校の数学の成績が高いという研究があります［2］。</p>
+</div>
+<div class="graph-card">
+  <div class="graph-card-title">② 高齢者の研究（ボケ防止）</div>
+  <ul>
+    <li>認知症の高齢者が、毎日短時間「かんたんな計算と音読」を続けたところ、前頭葉の働きを調べる検査（FAB）の点数が上がりました［3］。</li>
+    <li>健康な高齢者を2つの組にわけて比べた研究（ランダム化比較試験）でも、同じ学習をした組は 前頭葉の働き・処理の速さ の検査で成績が上がりました［4］。</li>
+    <li>「処理の速さ」を鍛える訓練を受けた高齢者は、10年後に認知症と診断される危険が低かった、という大きな研究（ACTIVE研究）があります［5］。計算道場の「時間をはかって、速く正確に」は、これに近い練習です。</li>
+    <li>認知症のおよそ45％は、教育・聞こえ（難聴）・運動不足・社会的な孤立など 14の「変えられる要因」と関係している、と国際的な専門家の委員会がまとめています［6］。頭を使う活動を続けることは、その一部にあたります。</li>
+  </ul>
+</div>
+<div class="graph-card">
+  <div class="graph-card-title">③ ただし、気をつけたいこと</div>
+  <ul>
+    <li>脳トレの効果は「練習した問題が上手になる」ことが中心です。生活全体の頭の働きや、認知症の予防にまでどれだけ広がるかは、はっきりしていません。1万人以上が参加した研究では、ほかの課題への広がりは小さいという結果でした［7］［8］。</li>
+    <li>なので計算道場は「これだけで予防」ではなく、<b>運動・睡眠・人との会話・聞こえのケア</b>と組み合わせる、頭を使う習慣のひとつと考えるのがおすすめです。</li>
+    <li>家族で同じ問題に取りくみ、ランキングを話題にすること自体が「人とのつながり」になります。これも［6］の要因のひとつです。</li>
+  </ul>
+</div>
+<div class="graph-card">
+  <div class="graph-card-title">④ 子どもにとっての意味（学習の研究）</div>
+  <ul>
+    <li><b>計算の自動化</b>：基本の計算がすらすらできると、頭の作業場所（ワーキングメモリ）があいて、文章題や考える問題に力をまわせます（認知負荷理論）［9］。</li>
+    <li><b>思い出す練習（テスト効果）</b>：答えを思い出して書く練習は、読みかえすより長く記憶に残ります［10］。連続モードと一問一答は、どちらもこの形です。</li>
+    <li><b>毎日すこしずつ（分散学習）</b>：まとめて長くやるより、間をあけてくり返すほうが身につきます［11］。カレンダーで「毎日つづける」を見えるようにしているのはこのためです。</li>
+    <li><b>分数が大事</b>：10〜12歳ごろの分数とわり算の理解は、高校の数学の成績を強く予測します［12］。最小公倍数と分数の問題を入れた理由です。</li>
+  </ul>
+</div>
+<div class="graph-card">
+  <div class="graph-card-title">⑤ このアプリの しくみ と 根拠</div>
+  <table class="hist-table about-table">
+    <tr><th>しくみ</th><th>ねらい</th><th>根拠</th></tr>
+    <tr><td>タイム計測・○◎タイム</td><td>速く正確に＝処理の速さ・自動化</td><td>［1］［5］［9］</td></tr>
+    <tr><td>連続モード・一問一答</td><td>思い出す練習</td><td>［10］</td></tr>
+    <tr><td>カレンダー・つづけた日数</td><td>毎日すこしずつ</td><td>［11］</td></tr>
+    <tr><td>まちがえた問題の練習</td><td>苦手をくり返す</td><td>［10］［11］</td></tr>
+    <tr><td>最小公倍数・分数</td><td>のちの数学の土台</td><td>［12］</td></tr>
+    <tr><td>ランキング・家族で共有</td><td>人とのつながり・やる気</td><td>［6］</td></tr>
+  </table>
+</div>
+<div class="graph-card refs">
+  <div class="graph-card-title">参考文献</div>
+  <ol>
+    <li>Kawashima R, et al. (2004). A functional MRI study of simple arithmetic—a comparison between children and adults. <i>Cognitive Brain Research</i>, 18(3), 227–233.</li>
+    <li>Price GR, Mazzocco MMM, Ansari D. (2013). Why mental arithmetic counts: brain activation during single digit arithmetic predicts high school math scores. <i>Journal of Neuroscience</i>, 33(1), 156–163.</li>
+    <li>Kawashima R, et al. (2005). Reading aloud and arithmetic calculation improve frontal function of people with dementia. <i>Journals of Gerontology A</i>, 60(3), 380–384.</li>
+    <li>Uchida S, Kawashima R. (2008). Reading and solving arithmetic problems improves cognitive functions of normal aged people: a randomized controlled study. <i>Age</i>, 30(1), 21–29.</li>
+    <li>Edwards JD, et al. (2017). Speed of processing training results in lower risk of dementia. <i>Alzheimer's &amp; Dementia: Translational Research &amp; Clinical Interventions</i>, 3(4), 603–611.</li>
+    <li>Livingston G, et al. (2024). Dementia prevention, intervention, and care: 2024 report of the Lancet standing Commission. <i>The Lancet</i>, 404(10452), 572–628.</li>
+    <li>Owen AM, et al. (2010). Putting brain training to the test. <i>Nature</i>, 465, 775–778.</li>
+    <li>Simons DJ, et al. (2016). Do "brain-training" programs work? <i>Psychological Science in the Public Interest</i>, 17(3), 103–186.</li>
+    <li>Sweller J. (1988). Cognitive load during problem solving: effects on learning. <i>Cognitive Science</i>, 12(2), 257–285.</li>
+    <li>Roediger HL, Karpicke JD. (2006). Test-enhanced learning: taking memory tests improves long-term retention. <i>Psychological Science</i>, 17(3), 249–255.</li>
+    <li>Cepeda NJ, et al. (2006). Distributed practice in verbal recall tasks: a review and quantitative synthesis. <i>Psychological Bulletin</i>, 132(3), 354–380.</li>
+    <li>Siegler RS, et al. (2012). Early predictors of high school mathematics achievement. <i>Psychological Science</i>, 23(7), 691–697.</li>
+  </ol>
+</div>`;
+
+// ---------- ランキング（みんなの計算履歴） ----------
+let rkSort = lsGet('rksort', 'week'), rkData = null;
+const RK_SORTS = [['week', 'この7日'], ['total', '通算'], ['points', '進みpt']];
+async function loadAllRecords() {
+  if (!sb) return { [getNickname() || 'あなた']: await loadRecords() };
+  const { data, error } = await sb.from('drill_records').select('user_id, played_at, score, theme, total_q, time_sec').like('theme', THEME_PREFIX + '%').order('played_at', { ascending: true }).limit(20000);
+  const by = {};
+  (error ? [] : data).forEach((r) => { (by[r.user_id] = by[r.user_id] || []).push(rowToRec(r)); });
+  const me = getNickname(); if (me) by[me] = (by[me] || []).concat(pendingRecs(me)).sort((a, b) => new Date(a.date) - new Date(b.date));
+  return by;
+}
+async function showRanking() {
+  showScreen('ranking-screen');
+  $('rk-list').innerHTML = '<div class="pp-note">よみこみ中…</div>';
+  const [recsBy, prog] = await Promise.all([loadAllRecords(), loadAllProgress()]);
+  const maps = {}; prog.forEach((r) => { (maps[r.user_id] = maps[r.user_id] || {})[r.item_key] = r.count; });
+  const me = getNickname(); if (me) maps[me] = progressMap;   // 自分は端末の最新
+  const names = [...new Set([...Object.keys(recsBy), ...Object.keys(maps)])];
+  rkData = names.map((name) => {
+    const recs = recsBy[name] || [], daily = dailyCounts(recs), sum = daySummary(daily), st = recStats(recs), pts = playerPoints(maps[name] || {});
+    return { name, recs, sum, total: st.total, pct: st.pct, pts, tier: tierOf(pts), last: recs.length ? new Date(recs[recs.length - 1].date) : null, map: maps[name] || {} };
+  });
+  renderRanking();
+}
+function renderRanking() {
+  $('rk-sort').innerHTML = RK_SORTS.map(([id, label]) => `<button class="qcount-btn${id === rkSort ? ' active' : ''}" onclick="rkSort='${id}';lsSet('rksort','${id}');renderRanking()">${label}</button>`).join('');
+  const val = (p) => (rkSort === 'week' ? p.sum.week : rkSort === 'total' ? p.total : p.pts);
+  const unit = rkSort === 'points' ? 'pt' : '問';
+  const list = rkData.slice().sort((a, b) => val(b) - val(a) || b.pts - a.pts);
+  const medals = ['🥇', '🥈', '🥉'];
+  $('rk-list').innerHTML = list.length ? list.map((p, i) => `
+    <div class="rk-card${p.name === getNickname() ? ' me' : ''}">
+      <div class="rk-head" onclick="this.parentNode.classList.toggle('open')">
+        <span class="rk-pos">${medals[i] || i + 1}</span>
+        <span class="rk-name">${esc(p.name)}${p.name === getNickname() ? '<span class="pp-me-tag">あなた</span>' : ''}<br>${tierBadge(p.tier)}</span>
+        <span class="rk-val">${val(p)}<small>${unit}</small></span>
+      </div>
+      <div class="rk-stats">
+        <span>今日 <b>${p.sum.today}</b>問</span><span>7日 <b>${p.sum.week}</b>問</span><span>通算 <b>${p.total}</b>問</span>
+        <span>正答率 <b>${p.pct ?? '-'}</b>%</span><span>進み <b>${p.pts}</b>pt</span><span>🔥 <b>${p.sum.streak}</b>日</span>
+      </div>
+      <div class="rk-last">さいごに解いた日時：${p.last ? fmtWhen(p.last) : 'まだなし'}</div>
+      <div class="rk-hist"><table class="hist-table"><thead><tr><th>日時</th><th>問題</th><th>せいせき</th><th>タイム</th></tr></thead>
+        <tbody>${p.recs.slice().reverse().slice(0, 10).map(histRow).join('') || '<tr><td colspan="4">まだ きろくがありません</td></tr>'}</tbody></table>
+        <div class="pp-note">さいきんの10回</div></div>
+    </div>`).join('') : '<div class="pp-note">まだ だれも解いていません</div>';
+}
+
+// ---------- すべての履歴（50回ずつ） ----------
+let histAll = [], histShown = 0;
+async function showHistory() {
+  const scopeIds = activeOp ? [activeOp] : modules.map((m) => m.id);
+  $('history-title').textContent = activeOp ? `${moduleById(activeOp).name} の履歴` : 'すべての履歴';
+  showScreen('history-screen');
+  $('h-body').innerHTML = ''; $('h-note').textContent = 'よみこみ中…';
+  histAll = (await loadRecords()).filter((r) => scopeIds.includes(r.moduleId)).reverse();
+  histShown = 0; moreHistory();
+}
+function moreHistory() {
+  const next = histAll.slice(histShown, histShown + 50);
+  let lastDay = histShown ? dayKey(new Date(histAll[histShown - 1].date)) : '';
+  $('h-body').insertAdjacentHTML('beforeend', next.map((r) => {
+    const k = dayKey(new Date(r.date)), head = k !== lastDay ? `<tr class="h-day"><td colspan="4">${fmtDay(new Date(r.date))}　${dayTotal(k)}問</td></tr>` : '';
+    lastDay = k; return head + histRow(r);
+  }).join(''));
+  histShown += next.length;
+  $('h-note').textContent = histAll.length ? `全${histAll.length}回中 ${histShown}回を表示` : 'まだ きろくがありません';
+  $('h-more').classList.toggle('hidden', histShown >= histAll.length);
+}
+const fmtDay = (d) => `${d.getMonth() + 1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`;
+function dayTotal(k) { return histAll.filter((r) => dayKey(new Date(r.date)) === k).reduce((s, r) => s + r.total, 0); }
 async function clearRecords() {
   if (!confirm('きろくと 進捗（シートの達成）を ぜんぶ けしますか？')) return;
   progressMap = {};
@@ -1296,7 +1580,7 @@ async function clearRecords() {
       await sb.from('drill_progress').delete().eq('user_id', u).eq('app', APP.id);
     } catch (e) { console.warn('delete failed', e.message); }
   }
-  renderTop(); renderPlayersProgress(); await renderGraph();
+  renderTop(); await renderGraph();
 }
 
 // =====================================================

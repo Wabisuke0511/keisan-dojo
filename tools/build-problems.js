@@ -258,7 +258,72 @@ sheets.filter((s) => s.op === 'lcm' || s.op === 'bunsu').forEach((s) => s.p.forE
   }
 }));
 
-const OP_ORDER = [...Object.keys(OPSYM), 'lcm', 'bunsu'];
+// ---------- 分数のかけ算・わり算 / 分数の混合計算（FX: { t: [[整数, 分子, 分母], ...], o: ['×','÷','+','−', ...], a: [答え整数, 答え分子, 答え分母] }） ----------
+// 整数の項は [整数, null, null]。計算の順序は ×÷ が先、+− があと（ふつうの決まり）
+const Q = (n, d = 1) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, d) || 1; return { n: n / g, d: d / g }; };
+const qOf = ([w, n, d]) => (n == null ? Q(w) : Q(w * d + n, d));
+const qOp = (x, op, y) => op === '×' ? Q(x.n * y.n, x.d * y.d) : op === '÷' ? Q(x.n * y.d, x.d * y.n)
+  : op === '+' ? Q(x.n * y.d + y.n * x.d, x.d * y.d) : Q(x.n * y.d - y.n * x.d, x.d * y.d);
+function evalFX(t, o) {                         // ×÷ を先にまとめて、+− を左から。途中でマイナスになったら null
+  const vals = [qOf(t[0])], ops = [];
+  o.forEach((op, i) => {
+    const y = qOf(t[i + 1]);
+    if (op === '×' || op === '÷') vals[vals.length - 1] = qOp(vals[vals.length - 1], op, y);
+    else { ops.push(op); vals.push(y); }
+  });
+  let acc = vals[0];
+  for (let i = 0; i < ops.length; i++) { acc = qOp(acc, ops[i], vals[i + 1]); if (acc.n < 0) return null; }
+  return acc;
+}
+function fxRow(t, o, opt = {}) {
+  const v = evalFX(t, o);
+  if (!v || v.n <= 0 || v.d > (opt.maxDen || 60) || v.n / v.d > (opt.maxVal || 20)) return null;
+  const a = fracAnswer(v.n, v.d);
+  return { key: JSON.stringify([t, o]), row: { t, o, a } };
+}
+const pf = (R, dens, whole = 0) => { const d = pick(R, dens); return [whole, properFrac(R, d), d]; };   // 真分数（約分ずみ）
+const D9 = range(2, 9), D12 = range(2, 12);
+const intOK = (R, row) => row && (row.row.a[1] !== null || R() < 0.15) ? row : null;   // 答えが整数になる問題は少なめ
+const MUL_INST = '計算しなさい。答えは約分して、1より大きいときは帯分数にしなさい。';
+addGenerated('bunsu2', [
+  { mode: 'FX', n: 18, good: 90, great: 60, instruction: '分数×整数、分数÷整数。' + MUL_INST.slice(7), example: '2/9×3=2/3',
+    gen: (R) => intOK(R, fxRow([pf(R, D9), [between(R, 2, 9), null, null]], [R() < 0.5 ? '×' : '÷'])) },
+  { mode: 'FX', n: 18, good: 120, great: 80, instruction: '分数×分数。約分できるときは、とちゅうで約分すると楽。' + MUL_INST.slice(7), example: '3/4×2/9=1/6',
+    gen: (R) => intOK(R, fxRow([pf(R, D9), pf(R, D9)], ['×'])) },
+  { mode: 'FX', n: 18, good: 120, great: 80, instruction: '分数÷分数。わる数をひっくり返してかける。' + MUL_INST.slice(7), example: '2/3÷4/9=1と1/2',
+    gen: (R) => intOK(R, fxRow([pf(R, D9), pf(R, D9)], ['÷'])) },
+  { mode: 'FX', n: 18, good: 180, great: 120, instruction: '帯分数のかけ算・わり算。帯分数は仮分数になおしてから。' + MUL_INST.slice(7), example: '1と1/2×2/3=1',
+    gen: (R) => intOK(R, fxRow([pf(R, D9, between(R, 0, 3)), pf(R, D9, between(R, 1, 2))].sort(() => R() - 0.5), [R() < 0.5 ? '×' : '÷'])) },
+  { mode: 'FX', n: 12, good: 180, great: 120, instruction: '3つの分数のかけ算・わり算。' + MUL_INST.slice(7), example: '2/3×3/4÷1/2=1',
+    gen: (R) => intOK(R, fxRow([pf(R, D9), pf(R, D9), pf(R, D9)], [R() < 0.5 ? '×' : '÷', R() < 0.5 ? '×' : '÷'])) },
+]);
+const ALL4 = ['+', '−', '×', '÷'];
+const mixedOps = (R, n) => {                    // +− と ×÷ が かならず まざるように
+  for (;;) { const o = Array.from({ length: n }, () => pick(R, ALL4)); if (n < 2 || (o.some((x) => x === '+' || x === '−') && o.some((x) => x === '×' || x === '÷'))) return o; }
+};
+const MIX_INST = '×÷を先に計算しなさい。答えは約分して、1より大きいときは帯分数に。';
+addGenerated('bunsu3', [
+  { mode: 'FX', n: 18, good: 150, great: 100, instruction: '+−×÷ のどれかの計算。答えは約分して、1より大きいときは帯分数に。', example: '3/4−1/6=7/12',
+    gen: (R) => intOK(R, fxRow([pf(R, D9), pf(R, D9)], [pick(R, ALL4)], { maxDen: 36 })) },
+  { mode: 'FX', n: 12, good: 180, great: 120, instruction: '3つの分数の計算。' + MIX_INST, example: '1/2+1/3×3/4=3/4',
+    gen: (R) => intOK(R, fxRow([pf(R, D9), pf(R, D9), pf(R, D9)], mixedOps(R, 2), { maxDen: 36 })) },
+  { mode: 'FX', n: 12, good: 240, great: 160, instruction: '帯分数をふくむ3つの分数の計算。' + MIX_INST, example: '1と1/2÷3/4−2/3=1と1/3',
+    gen: (R) => intOK(R, fxRow([pf(R, D9, between(R, 1, 2)), pf(R, D9), pf(R, D9)], mixedOps(R, 2), { maxDen: 36 })) },
+  { mode: 'FX', n: 12, good: 300, great: 200, instruction: '4つの分数の計算。' + MIX_INST, example: '1/2×2/3+3/4÷3/8=2と1/3',
+    gen: (R) => intOK(R, fxRow([pf(R, D9), pf(R, D9), pf(R, D9), pf(R, D9)], mixedOps(R, 3), { maxDen: 48 })) },
+]);
+// FX の検算：小数で計算しなおして答えと比べる（べつの方法）＋答えの形
+sheets.filter((s) => s.mode === 'FX').forEach((s) => s.p.forEach((r) => {
+  const num = r.t.map(([w, n, d]) => (n == null ? w : w + n / d));
+  const vals = [num[0]], ops = [];
+  r.o.forEach((op, i) => { if (op === '×') vals[vals.length - 1] *= num[i + 1]; else if (op === '÷') vals[vals.length - 1] /= num[i + 1]; else { ops.push(op); vals.push(num[i + 1]); } });
+  const f = ops.reduce((acc, op, i) => (op === '+' ? acc + vals[i + 1] : acc - vals[i + 1]), vals[0]);
+  const [W, N, D] = r.a, ans = W + (N == null ? 0 : N / D);
+  const okForm = N == null || (N < D && gcd(N, D) === 1);
+  if (Math.abs(f - ans) > 1e-9 || !okForm || ans <= 0) warnings.push(`${s.op} ${s.level}-${s.no}: ${JSON.stringify(r)}`);
+}));
+
+const OP_ORDER = [...Object.keys(OPSYM), 'lcm', 'bunsu', 'bunsu2', 'bunsu3'];
 sheets.sort((x, y) => OP_ORDER.indexOf(x.op) - OP_ORDER.indexOf(y.op) || x.level - y.level || x.no - y.no);
 
 const fmtSheet = (s) => `SHEETS.push(${JSON.stringify({ ...s, p: undefined }).replace(/}$/, '')},\n  "p":[${s.p.map((r) => JSON.stringify(r)).join(',')}]});`;
@@ -270,6 +335,7 @@ const out = `// =====================================================
 //  p の1行: N,O1,T10 → [a, b, 答え]   R → [a, b, 商, あまり]   S,S3,K → [a, b, 答え, 途中1, 途中2]
 //          L2 → [a, b, 最小公倍数]   L3 → [a, b, c, 最小公倍数]
 //          F → [整数1, 分子1, 分母1, '+'/'-', 整数2, 分子2, 分母2, 答え整数, 答え分子, 答え分母]（答えが整数なら分子・分母は null）
+//          FX → { t: [[整数, 分子, 分母], ...], o: ['×','÷','+','−'...], a: [答え整数, 答え分子, 答え分母] }（整数の項は [n, null, null]・×÷が先）
 //  good=○タイム(秒) great=◎タイム(秒)
 //  gen:true = 本にないシートを、同じレベルの本の問題と同じ形でつくったもの（各レベル4枚にそろえるため）
 // =====================================================

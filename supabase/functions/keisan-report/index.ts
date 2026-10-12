@@ -19,6 +19,7 @@ const OPS: Record<string, { name: string; icon: string }> = {
   tashizan: { name: "たし算", icon: "➕" }, hikizan: { name: "ひき算", icon: "➖" },
   kakezan: { name: "かけ算", icon: "✖️" }, warizan: { name: "わり算", icon: "➗" },
   lcm: { name: "最小公倍数", icon: "🔗" }, bunsu: { name: "分数のたし算・ひき算", icon: "🍰" },
+  bunsu2: { name: "分数のかけ算・わり算", icon: "🥧" }, bunsu3: { name: "分数の混合計算", icon: "🧁" },
 };
 const okMail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 200;
 
