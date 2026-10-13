@@ -241,14 +241,33 @@
     .h-day td { background: #f0f4f8; font-weight: 900; color: var(--primary-dark); font-size: .8rem; padding: 6px 4px; }
     .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .home-action-btn.gold { background: #b7950b; }
-    .tier-chip { margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; flex-wrap: wrap; justify-content: center; }
-    .tier-chip:empty { display: none; }
     .tier-pt { font-size: .8rem; font-weight: 800; opacity: .95; }
     .tier { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .85rem; font-weight: 900; color: #fff; background: #95a5a6; white-space: nowrap; }
     .tier.t-none { background: rgba(127,140,141,.6); }
     .tier.t0 { background: #a0522d; } .tier.t1 { background: #7f8c8d; } .tier.t2 { background: #c9a227; } .tier.t3 { background: #3aa6a6; }
     .tier.t4 { background: #2e86de; } .tier.t5 { background: #8e44ad; } .tier.t6 { background: #c0392b; } .tier.t7 { background: linear-gradient(90deg, #f39c12, #e84393, #6c5ce7); }
-    .tier-up { margin-top: 10px; padding: 12px; border-radius: 12px; background: #fff8e1; color: #b7950b; font-size: 1.1rem; font-weight: 900; }
+    .tier-up { margin-top: 10px; padding: 14px 12px; border-radius: 14px; background: #fff8e1; color: #8a6d00; font-size: 1.05rem; font-weight: 900; line-height: 1.6; }
+    .tier-up .tu-title { font-size: 1.4rem; color: #b7950b; margin-top: 6px; }
+    .tier-up .tu-yen { font-size: 1.25rem; color: #c0392b; } .tier-up .tu-note { font-size: .9rem; color: var(--muted); }
+    /* メダル：丸・グラデーション・二重の縁（外側にランク色、内側に白） */
+    .medal { --c1: #bdc3c7; --c2: #7f8c8d; width: 64px; height: 64px; flex-shrink: 0; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem;
+      background: radial-gradient(circle at 35% 30%, #fff 0, var(--c1) 35%, var(--c2) 100%); border: 3px solid #fff; box-shadow: 0 0 0 3px var(--c2), 0 3px 8px rgba(0,0,0,.25); }
+    .medal.big { width: 84px; height: 84px; font-size: 2.6rem; } .medal.small { width: 40px; height: 40px; font-size: 1.25rem; border-width: 2px; box-shadow: 0 0 0 2px var(--c2); }
+    .medal.mnone { --c1: #ecf0f1; --c2: #bdc3c7; }
+    .medal.m0 { --c1: #e3a37a; --c2: #a0522d; } .medal.m1 { --c1: #e5e8e8; --c2: #7f8c8d; } .medal.m2 { --c1: #f7dc6f; --c2: #c9a227; } .medal.m3 { --c1: #a8e6e6; --c2: #3aa6a6; }
+    .medal.m4 { --c1: #a9d4ff; --c2: #2e86de; } .medal.m5 { --c1: #d7bde2; --c2: #8e44ad; } .medal.m6 { --c1: #f5b7b1; --c2: #c0392b; } .medal.m7 { --c1: #fdebd0; --c2: #e84393; }
+    .rank-card { margin: 20px 16px 0; background: var(--card); border-radius: var(--radius); box-shadow: 0 2px 8px rgba(0,0,0,.08); padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; border-left: 5px solid #b7950b; }
+    .rank-card:empty { display: none; }
+    .rc-info { flex: 1; min-width: 0; }
+    .rc-label { font-size: .75rem; color: var(--muted); font-weight: 800; }
+    .rc-name { font-size: 1.25rem; font-weight: 900; } .rc-name small { font-size: .8rem; color: var(--muted); margin-left: 8px; }
+    .rc-next { font-size: .8rem; font-weight: 700; color: var(--primary-dark); margin: 2px 0 6px; }
+    .rc-unpaid { margin-top: 8px; font-size: .85rem; font-weight: 800; color: #c0392b; } .rc-unpaid b { font-size: 1rem; }
+    .md-badge { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .md-paid { font-size: .8rem; font-weight: 900; color: var(--success); display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+    .md-paid small { font-size: .7rem; color: var(--muted); font-weight: 700; }
+    .md-cancel { margin-left: 6px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); font-size: .72rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .md-st { display: inline-flex; align-items: center; }
     .medal-now { text-align: center; }
     .md-name { font-weight: 800; color: var(--muted); }
     .md-badge { margin: 8px 0; } .md-badge .tier { font-size: 1.3rem; padding: 6px 18px; }
@@ -257,7 +276,7 @@
     .md-row.got { opacity: 1; }
     .md-ic { font-size: 1.6rem; } .md-info { flex: 1; display: flex; flex-direction: column; } .md-info small { color: var(--muted); font-weight: 700; }
     .md-yen { font-weight: 900; color: #b7950b; }
-    .md-lock { font-size: .75rem; color: var(--muted); font-weight: 800; }
+    .md-lock { font-size: 1.1rem; }
     .md-give { padding: 6px 10px; border: 2px solid #b7950b; border-radius: 10px; background: #fff; color: #b7950b; font-weight: 800; font-size: .8rem; cursor: pointer; font-family: inherit; }
     .md-give.on { background: #b7950b; color: #fff; }
     .md-total { margin-top: 12px; font-size: .85rem; font-weight: 700; color: var(--muted); line-height: 1.6; }
@@ -320,11 +339,11 @@
       <span>あだな：<span class="nickname-name" id="nickname-display">（未設定）</span></span>
       <button class="nickname-change-btn" onclick="showNicknameModal(true)">変える</button>
     </div>
-    <div class="tier-chip" id="tier-chip" onclick="showMedals()"></div>
     <div class="today-bar" id="today-bar" onclick="showGraph()"></div>
     <div><button class="version-badge" id="version-badge" onclick="showVersionHistory()"></button><span class="last-played" id="last-played"></span></div>
     <div class="sync-info" id="sync-info"></div>
   </div>
+  <div class="rank-card" id="rank-card" onclick="showMedals()"></div>
   <div class="categories-list" id="categories-list"></div>
   <div class="top-actions">
     <button class="home-action-btn" onclick="showGraph()">📊 きろく（グラフ・履歴）</button>
@@ -566,8 +585,8 @@ const APP = {
   name: '計算道場',
   emoji: '🧮',
   tagline: 'はやく・正確に。タイムをちぢめよう。',
-  version: 'v0.8.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
-  buildTime: '202610121420',      // yyyymmddhhmm ★デプロイのたびに更新
+  version: 'v0.9.0',              // ★デプロイのたびに更新（SWのキャッシュ名にも使われる）
+  buildTime: '202610132123',      // yyyymmddhhmm ★デプロイのたびに更新
   color: '#2d6fb0',               // メインカラー
   colorDark: '#1f5089',
   clearCount: 3,                  // シートの達成度 1=ぜんもん正解 2=○タイム 3=◎タイム。3で「クリア」
@@ -582,6 +601,7 @@ const APP = {
 
 // 更新履歴（新しい版を先頭に追加）
 const CHANGELOG = [
+  { version: 'v0.9.0', date: '2026-10-13', items: ['ホームに「いまのランク」カード（メダル・次のランクまでの点数と賞金・まだもらっていない賞金）', 'ランクアップしたとき「おうちの人に もらおう！」と表示', '賞金は「🎁 わたす」→「✓ もらった＋日付」、取消もできるように'] },
   { version: 'v0.8.0', date: '2026-10-12', items: ['○◎タイムに ボタン入力ぶんの時間を足しました（ボタン1回 0.3秒）', '分数の入力を 整数→分母→分子 の順に'] },
   { version: 'v0.7.0', date: '2026-10-12', items: ['分数のかけ算・わり算（5レベル）と 分数の混合計算（4レベル・3〜4つの分数）を追加', '履歴は さいきん10回だけ表示し、のこりは「すべての履歴」ページに', 'ランキング（みんなの計算履歴）を追加', 'ランク（ブロンズ〜レジェンド）と賞金の一覧を追加', '「このアプリと脳」（学術的な根拠）のページを追加'] },
   { version: 'v0.6.0', date: '2026-10-11', items: ['端末どうしの記録のズレを修正（アプリにもどったとき読み直す・◎を○で上書きしない・送れなかった記録はあとで送る）', 'あだなは これまでの あだなから えらべるように', 'バージョンの横に「さいごに解いた日時」を表示'] },
@@ -864,13 +884,15 @@ async function pushProgress(key, count) {
   try { const best = await saveProgressMax(user, key, count); if (getNickname() === user) progressMap[key] = best; }
   catch (e) { console.warn('progress save failed', e.message); addPending({ kind: 'progress', user_id: user, key, count }); }
 }
+let rewardAt = lsGet('rewardAt', {});            // 賞金を わたした日時（reward:番号 → ISO）
 async function loadMyProgress() {
   if (!sb) { progressMap = lsGet('progress', {}); renderTop(); return; }
   const user = getNickname(); if (!user) return;
   try {
-    const { data, error } = await sb.from('drill_progress').select('item_key, count').eq('user_id', user).eq('app', APP.id);
+    const { data, error } = await sb.from('drill_progress').select('item_key, count, updated_at').eq('user_id', user).eq('app', APP.id);
     if (error || !data) { progressMap = lsGet('progress', {}); renderTop(); return; }
     const fresh = {}; data.forEach((r) => { fresh[r.item_key] = r.count; });   // Supabaseが正
+    rewardAt = {}; data.filter((r) => r.item_key.startsWith('reward:')).forEach((r) => { rewardAt[r.item_key] = r.updated_at; });
     // まだ送れていない進み具合は、こちらが大きければ残す
     pendingList().filter((p) => p.kind === 'progress' && p.user_id === user).forEach((p) => { fresh[p.key] = Math.max(fresh[p.key] || 0, p.count); });
     progressMap = fresh;
@@ -940,35 +962,52 @@ function playerPoints(map) { return progressOf(allKeys(), map).points; }
 function tierOf(points) { let k = -1; TIERS.forEach((t, i) => { if (points >= tierPt(t)) k = i; }); return k; }   // -1 = まだランクなし
 const yen = (n) => n.toLocaleString('ja-JP') + '円';
 function tierBadge(k) { return k < 0 ? '<span class="tier t-none">ランクなし</span>' : `<span class="tier t${k}">${TIERS[k].icon} ${TIERS[k].name}</span>`; }
+const medal = (k, size = '') => `<span class="medal m${k < 0 ? 'none' : k} ${size}">${k < 0 ? '🔰' : TIERS[k].icon}</span>`;
+const isGiven = (i) => (progressMap['reward:' + i] || 0) >= 1;
+function unpaidYen(pts) { return TIERS.reduce((sum, t, i) => sum + (pts >= tierPt(t) && !isGiven(i) ? t.yen : 0), 0); }
 function renderTierChip() {
-  const pts = playerPoints(), k = tierOf(pts), nx = TIERS[k + 1];
-  $('tier-chip').innerHTML = getNickname() ? `${tierBadge(k)}<span class="tier-pt">${pts}pt${nx ? `・${nx.name}まで あと${tierPt(nx) - pts}pt` : ''}</span>` : '';
+  const card = $('rank-card');
+  if (!getNickname()) { card.innerHTML = ''; return; }
+  const pts = playerPoints(), k = tierOf(pts), nx = TIERS[k + 1], unpaid = unpaidYen(pts);
+  const prev = k >= 0 ? tierPt(TIERS[k]) : 0, pct = nx ? Math.round((pts - prev) / (tierPt(nx) - prev) * 100) : 100;
+  card.innerHTML = `${medal(k)}
+    <div class="rc-info">
+      <div class="rc-label">いまのランク</div>
+      <div class="rc-name">${k < 0 ? 'まだランクなし' : TIERS[k].name}<small>${pts}pt</small></div>
+      ${nx ? `<div class="rc-next">つぎの ${nx.icon}${nx.name} まで あと <b>${tierPt(nx) - pts}pt</b>（🎁 ${yen(nx.yen)}）</div>
+        <div class="tile-prog-track"><div class="tile-prog-fill" style="width:${pct}%"></div></div>` : '<div class="rc-next">🌟 ぜんぶのランクを達成！</div>'}
+      ${unpaid ? `<div class="rc-unpaid">🎁 まだもらっていない賞金 <b>${yen(unpaid)}</b></div>` : ''}
+    </div><div class="cat-arrow">›</div>`;
 }
 async function showMedals() {
   showScreen('medal-screen');
   const pts = playerPoints(), k = tierOf(pts), nx = TIERS[k + 1], prev = k >= 0 ? tierPt(TIERS[k]) : 0;
   const pct = nx ? Math.round((pts - prev) / (tierPt(nx) - prev) * 100) : 100;
   $('md-now').innerHTML = `<div class="md-name">${esc(getNickname() || '（あだな未設定）')} さん</div>
-    <div class="md-badge">${tierBadge(k)}</div><div class="md-pt">${pts} <small>/ ${PARTS.length * APP.clearCount} pt</small></div>
+    <div class="md-badge">${medal(k, 'big')}<div>${tierBadge(k)}</div></div>${unpaidYen(pts) ? `<div class="rc-unpaid">🎁 まだもらっていない賞金 <b>${yen(unpaidYen(pts))}</b></div>` : ''}<div class="md-pt">${pts} <small>/ ${PARTS.length * APP.clearCount} pt</small></div>
     ${nx ? `<div class="pp-track" style="margin:10px 0 6px"><div class="pp-fill" style="width:${pct}%"></div></div>
       <div class="pp-note">つぎの ${nx.icon}${nx.name} まで あと <b>${tierPt(nx) - pts}pt</b>（賞金 ${yen(nx.yen)}）</div>` : '<div class="pp-note">🌟 ぜんぶのシートを◎にしました！</div>'}`;
-  const given = (i) => (progressMap['reward:' + i] || 0) >= 1;
+  const given = isGiven;
+  const paidDay = (i) => { const at = rewardAt['reward:' + i]; if (!at) return ''; const d = new Date(at); return `${d.getMonth() + 1}/${d.getDate()}`; };
   $('md-list').innerHTML = TIERS.map((t, i) => {
     const got = pts >= tierPt(t);
     return `<div class="md-row${got ? ' got' : ''}">
-      <span class="md-ic">${t.icon}</span>
+      ${medal(got ? i : -1, 'small')}
       <span class="md-info"><b>${t.name}</b><small>${t.pt == null ? 'ぜんぶのシートを◎（' + tierPt(t) + 'pt）' : t.pt + 'pt'}</small></span>
       <span class="md-yen">${yen(t.yen)}</span>
-      <span class="md-st">${!got ? '<span class="md-lock">まだ</span>'
-        : `<button class="md-give${given(i) ? ' on' : ''}" onclick="toggleGiven(${i})">${given(i) ? '✓ わたした' : 'わたした？'}</button>`}</span></div>`;
+      <span class="md-st">${!got ? '<span class="md-lock">🔒</span>'
+        : given(i) ? `<span class="md-paid">✓ もらった${paidDay(i) ? '<small>' + paidDay(i) + '</small>' : ''}</span><button class="md-cancel" onclick="toggleGiven(${i})">取消</button>`
+        : `<button class="md-give" onclick="toggleGiven(${i})">🎁 わたす</button>`}</span></div>`;
   }).join('') + `<div class="md-total">ここまでの賞金 合計 <b>${yen(TIERS.filter((t) => pts >= tierPt(t)).reduce((s, t) => s + t.yen, 0))}</b>
     （わたしずみ ${yen(TIERS.filter((t, i) => given(i)).reduce((s, t) => s + t.yen, 0))}）／ぜんぶで ${yen(TIERS.reduce((s, t) => s + t.yen, 0))}</div>`;
 }
 // 「わたした」は進みポイントとは別に drill_progress に 'reward:番号' として保存（2台で共有）
 async function toggleGiven(i) {
   const key = 'reward:' + i, now = (progressMap[key] || 0) >= 1, t = TIERS[i];
-  if (!confirm(now ? `${t.name}の賞金を「まだ わたしていない」にもどしますか？` : `${t.name}の賞金 ${yen(t.yen)} を わたしましたか？`)) return;
+  if (!confirm(now ? `${t.name}の賞金「もらった」を 取り消しますか？` : `${t.name}の賞金 ${yen(t.yen)} を わたしましたか？（おうちの人が おしてください）`)) return;
   progressMap[key] = now ? 0 : 1;
+  if (now) delete rewardAt[key]; else rewardAt[key] = new Date().toISOString();
+  lsSet('rewardAt', rewardAt);
   if (sb && getNickname()) {
     const { error } = await sb.from('drill_progress').upsert({ user_id: getNickname(), app: APP.id, item_key: key, count: progressMap[key], updated_at: new Date().toISOString() }, { onConflict: 'user_id,app,item_key' });
     if (error) { alert('保存できませんでした。通信を確かめてください'); progressMap[key] = now ? 1 : 0; }
@@ -1228,7 +1267,8 @@ async function finishRun() {
     $('result-detail').innerHTML = `${total}問中 ${correct}問正解` +
       (p.great != null || p.good != null ? `<br>◎ ${fmtTime(p.great)}　○ ${fmtTime(p.good)}${p.scaled ? '（目安）' : ''}` : '');
     $('result-best').innerHTML = (best.improved && best.prev ? `きろく こうしん！ ${RANK_MARK[best.prev]} → ${RANK_MARK[rank]}` : '') +
-      (run.tierUp != null ? `<div class="tier-up">🎉 ${TIERS[run.tierUp].icon} ${TIERS[run.tierUp].name}ランクに 上がった！<br>賞金 ${yen(TIERS[run.tierUp].yen)}</div>` : '');
+      (run.tierUp != null ? `<div class="tier-up">${medal(run.tierUp, 'big')}<div class="tu-title">ランクアップ！</div>
+        <div>${TIERS[run.tierUp].name}に なった！</div><div class="tu-yen">🎁 賞金 ${yen(TIERS[run.tierUp].yen)}</div><div class="tu-note">おうちの人に もらおう！</div></div>` : '');
     $('btn-retry').textContent = 'もういちど（同じシート）';
   } else {
     const pct = Math.round(correct / total * 100), avg = run.results.reduce((s, r) => s + r.sec, 0) / total;
